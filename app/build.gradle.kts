@@ -8,16 +8,15 @@ plugins {
 }
 
 android {
-    namespace = "com.example.myapplication"
+    namespace = "com.example.kakaoimagevideosearch"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.myapplication"
+        applicationId = "com.example.kakaoimagevideosearch"
         minSdk = 28
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-        testInstrumentationRunner = "com.example.stylefeed.HiltTestRunner"
     }
 
     buildTypes {
