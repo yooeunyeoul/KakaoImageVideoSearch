@@ -1,7 +1,9 @@
 package com.example.kakaoimagevideosearch.di
 
+import com.example.kakaoimagevideosearch.data.api.ApiConstants
 import com.example.kakaoimagevideosearch.data.api.ItemApiService
 import com.example.kakaoimagevideosearch.data.api.ItemApiServiceImpl
+import com.example.kakaoimagevideosearch.data.api.KakaoSearchApi
 import com.example.kakaoimagevideosearch.utils.NetworkResultCallAdapterFactory
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
@@ -40,11 +42,16 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit =
         Retrofit.Builder()
-            .baseUrl("https://api.example.com/") // 실제 API URL로 변경 필요
+            .baseUrl(ApiConstants.BASE_URL)
             .client(okHttpClient)
             .addCallAdapterFactory(NetworkResultCallAdapterFactory())
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
+
+    @Provides
+    @Singleton
+    fun provideKakaoSearchApi(retrofit: Retrofit): KakaoSearchApi =
+        retrofit.create(KakaoSearchApi::class.java)
 
     @Provides
     @Singleton

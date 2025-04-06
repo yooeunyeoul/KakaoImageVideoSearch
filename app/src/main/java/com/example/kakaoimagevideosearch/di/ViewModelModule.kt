@@ -4,6 +4,7 @@ import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.MavericksViewModelComponent
 import com.airbnb.mvrx.hilt.ViewModelKey
 import com.example.kakaoimagevideosearch.MainViewModel
+import com.example.kakaoimagevideosearch.presentation.search.SearchViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -16,4 +17,9 @@ interface ViewModelModule {
     @IntoMap
     @ViewModelKey(MainViewModel::class)
     fun mainViewModelFactory(factory: MainViewModel.Factory): AssistedViewModelFactory<*, *>
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(SearchViewModel::class)
+    fun searchViewModelFactory(factory: SearchViewModel.Factory): AssistedViewModelFactory<*, *>
 } 

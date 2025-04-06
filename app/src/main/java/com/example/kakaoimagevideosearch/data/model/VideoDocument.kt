@@ -9,10 +9,6 @@ data class VideoDocument(
     val author: String,
     @SerialName("datetime")
     val datetime: String,
-    @SerialName("display_sitename")
-    val displaySitename: String,
-    @SerialName("doc_url")
-    val docUrl: String,
     @SerialName("play_time")
     val playTime: Int,
     @SerialName("thumbnail")

@@ -22,7 +22,7 @@ fun VideoDocument.toDomain() = SearchResult(
     id = UUID.randomUUID().toString(),
     thumbnailUrl = thumbnail,
     title = title,
-    source = docUrl,
+    source = url,
     datetime = formatDateTime(datetime),
     type = SearchResultType.VIDEO
 )

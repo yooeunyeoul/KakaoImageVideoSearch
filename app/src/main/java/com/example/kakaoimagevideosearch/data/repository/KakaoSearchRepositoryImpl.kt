@@ -1,7 +1,6 @@
 package com.example.kakaoimagevideosearch.data.repository
 
 import com.example.kakaoimagevideosearch.data.api.KakaoSearchApi
-import com.example.kakaoimagevideosearch.data.mapper.toDomain
 import com.example.kakaoimagevideosearch.data.mapper.toImageDomain
 import com.example.kakaoimagevideosearch.data.mapper.toVideoDomain
 import com.example.kakaoimagevideosearch.domain.model.SearchResult
