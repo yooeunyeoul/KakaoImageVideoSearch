@@ -3,6 +3,7 @@
 package com.example.kakaoimagevideosearch
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -36,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -113,6 +116,24 @@ fun SearchScreen(
             }
         }
     }
+    // LazyListState 생성 및 기억
+    val listState = rememberLazyListState() // <--- 여기! listState 선언 및 생성
+
+    // 스크롤 상태 로깅 (LaunchedEffect 또는 derivedStateOf 사용 고려)
+    // LaunchedEffect는 키가 변경될 때마다 재시작, derivedStateOf는 계산 중 읽는 상태가 변경될 때 재계산
+    // 여기서는 스크롤 시마다 로그가 필요하므로 snapshotFlow 사용하는 것이 더 적합할 수 있음
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .collect { index ->
+                Log.d("SearchScreen", "First Visible Item Index: $index")
+            }
+    }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.map { it.index } }
+            .collect { visibleIndices ->
+                Log.d("SearchScreen", "Visible Item Indices: $visibleIndices")
+            }
+    }
 
     Scaffold() { paddingValues ->
         Column(
@@ -177,6 +198,7 @@ fun SearchScreen(
 
 
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp) // 아이템 간 간격
             ) {

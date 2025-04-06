@@ -1,5 +1,6 @@
 package com.example.kakaoimagevideosearch.presentation.search
 
+import android.util.Log
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.airbnb.mvrx.Async
@@ -54,27 +55,40 @@ class SearchViewModel @AssistedInject constructor(
     private val searchRepository: SearchRepository
 ) : BaseMviViewModel<SearchState, SearchEvent, SearchEffect>(initialState) {
 
+    companion object : MavericksViewModelFactory<SearchViewModel, SearchState> by hiltMavericksViewModelFactory() {
+        private const val TAG = "SearchViewModel"
+    }
+
     init {
+        Log.d(TAG, "SearchViewModel 초기화")
         // query가 변경되면 자동으로 검색 실행 (Debounce 등을 추가하면 더 좋음)
         onEach(SearchState::query) { query ->
+            Log.d(TAG, "쿼리 변경 감지: '$query'")
             if (query.isNotBlank()) {
                 executeSearch(query)
             } else {
                 // 쿼리가 비어있으면 페이징 데이터 클리어
+                Log.d(TAG, "쿼리가 비어있어 페이징 데이터 초기화")
                 setState { copy(pagingDataFlow = emptyFlow(), searchSetupAsync = Uninitialized, setupError = null) }
             }
         }
     }
 
     private fun executeSearch(query: String) {
+        Log.d(TAG, "executeSearch 호출: 쿼리='$query'")
+        
         // 검색 시작 시 상태 업데이트 (로딩 상태 표시 - Flow 설정 단계)
         setState { copy(searchSetupAsync = Loading(), setupError = null) }
 
         try {
             // Repository에서 Flow를 가져와서 State에 설정
             // cachedIn은 ViewModelScope 내에서 호출되어야 Flow가 유지됨
+            Log.d(TAG, "페이징 데이터 Flow 요청 시작: 쿼리='$query'")
             val newPagingFlow = searchRepository.getSearchResults(query)
                 .cachedIn(viewModelScope) // ViewModelScope에서 캐싱
+                .distinctUntilChanged() // 중복 발행 방지를 위해 추가
+            
+            Log.d(TAG, "페이징 데이터 Flow 설정 완료: 쿼리='$query'")
 
             setState {
                 copy(
@@ -86,6 +100,7 @@ class SearchViewModel @AssistedInject constructor(
 
         } catch (e: Exception) {
             // Flow 생성/설정 자체에서 에러 발생 시 처리
+            Log.e(TAG, "페이징 데이터 Flow 설정 실패: 쿼리='$query'", e)
             setState {
                 copy(
                     searchSetupAsync = Fail(e),
@@ -96,19 +111,34 @@ class SearchViewModel @AssistedInject constructor(
             sendEffect(SearchEffect.ShowError(e.message ?: "검색 준비 중 오류가 발생했습니다."))
         }
     }
+    
     override fun onEvent(event: SearchEvent) {
         when (event) {
-            is SearchEvent.Search -> setState { copy(query = event.query) }
-            is SearchEvent.Refresh -> withState { state ->
-                executeSearch(state.query)
+            is SearchEvent.Search -> {
+                Log.d(TAG, "이벤트 처리: Search 이벤트 (쿼리='${event.query}')")
+                setState { copy(query = event.query) }
+            }
+            is SearchEvent.Refresh -> {
+                withState { state ->
+                    Log.d(TAG, "이벤트 처리: Refresh 이벤트 (현재 쿼리='${state.query}')")
+                    if (state.query.isNotBlank()) {
+                        executeSearch(state.query)
+                    } else {
+                        Log.d(TAG, "쿼리가 비어있어 Refresh 무시")
+                    }
+                }
             }
         }
+    }
+
+    // 메모리 상태 추적을 위한 추가 메서드
+    override fun onCleared() {
+        super.onCleared()
+        Log.d(TAG, "SearchViewModel onCleared 호출됨 (ViewModel 소멸)")
     }
 
     @AssistedFactory
     interface Factory : AssistedViewModelFactory<SearchViewModel, SearchState> {
         override fun create(state: SearchState): SearchViewModel
     }
-
-    companion object : MavericksViewModelFactory<SearchViewModel, SearchState> by hiltMavericksViewModelFactory()
 } 
