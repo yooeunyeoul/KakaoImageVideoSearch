@@ -101,4 +101,8 @@ dependencies {
     kaptAndroidTest(libs.hilt.compiler)
     androidTestAnnotationProcessor(libs.hilt.compiler)
     testAnnotationProcessor(libs.hilt.compiler)
+
+    // 🔷 Paging 3 🔷
+    implementation(libs.androidx.paging.runtime.ktx)
+    implementation(libs.androidx.paging.compose)
 }

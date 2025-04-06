@@ -7,6 +7,7 @@ sealed class ApiError(val code: Int) {
 
     companion object {
         const val NETWORK_ERROR_CODE = -1
+        const val UNKNOWN_ERROR_CODE = -2
 
         fun fromCode(code: Int): ApiError = when (code) {
             NETWORK_ERROR_CODE -> NetworkError
