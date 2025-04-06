@@ -277,7 +277,7 @@ fun SearchScreen(
 @Composable
 fun SearchResultItem(item: SearchResult) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().height(100.dp),
     ) {
         Row(modifier = Modifier.padding(8.dp)) {
             // 실제 이미지 로딩 라이브러리(Coil, Glide 등) 사용 필요

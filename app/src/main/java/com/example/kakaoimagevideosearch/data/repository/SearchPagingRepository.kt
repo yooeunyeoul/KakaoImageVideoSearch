@@ -27,7 +27,7 @@ class SearchPagingRepository @Inject constructor(
             config = PagingConfig(
                 pageSize = PAGE_SIZE,
                 enablePlaceholders = false,
-                maxSize = PAGE_SIZE * 3,
+                maxSize = PAGE_SIZE * 4,
                 prefetchDistance = 20
             ),
             pagingSourceFactory = { 
