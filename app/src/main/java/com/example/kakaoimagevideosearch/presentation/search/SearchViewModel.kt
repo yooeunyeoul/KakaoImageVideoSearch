@@ -188,12 +188,6 @@ class SearchViewModel @AssistedInject constructor(
         }
     }
 
-    // 메모리 상태 추적을 위한 추가 메서드
-    override fun onCleared() {
-        super.onCleared()
-        Log.d(TAG, "SearchViewModel onCleared 호출됨 (ViewModel 소멸)")
-    }
-
     /**
      * 검색 결과 ID로 좋아요 상태 토글 (내부 메서드로 변경)
      */
