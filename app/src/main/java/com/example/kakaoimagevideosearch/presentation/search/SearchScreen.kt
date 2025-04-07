@@ -60,7 +60,6 @@ import com.airbnb.mvrx.compose.mavericksViewModel
 import com.example.kakaoimagevideosearch.domain.model.SearchResult
 import com.example.kakaoimagevideosearch.domain.model.SearchResultType
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flowOf
 
 @Composable
 fun SearchScreen(
@@ -77,19 +76,7 @@ fun SearchScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val gridState = rememberLazyGridState()
 
-    LaunchedEffect(state.query) {
-        if (state.query.isNotBlank()) {
-            gridState.scrollToItem(0)
-        }
-    }
-
-    val favoriteStatuses by remember(state.query) {
-        if (state.query.isNotBlank()) {
-            viewModel.getFavoriteStatusFlow(state.query)
-        } else {
-            flowOf(emptyList())
-        }
-    }.collectAsState(initial = emptyList())
+    val favoriteStatuses by state.favoriteStatusFlow.collectAsState(initial = emptyList())
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collectLatest { effect ->
@@ -99,6 +86,9 @@ fun SearchScreen(
                         message = effect.message,
                         duration = SnackbarDuration.Short
                     )
+                }
+                is SearchEffect.FavoriteToggled -> {
+                    // 북마크 토글 완료 효과 처리를 위한 추가 로직 (필요시)
                 }
             }
         }
@@ -171,7 +161,9 @@ fun SearchScreen(
                             GridSearchResultItem(
                                 item = item,
                                 isFavorite = isFavorite,
-                                onFavoriteClick = { viewModel.toggleFavorite(item.id) }
+                                onFavoriteClick = { 
+                                    viewModel.onEvent(SearchEvent.ToggleFavorite(item.id))
+                                }
                             )
                         } else {
                             Box(modifier = Modifier.aspectRatio(1f).background(Color.Gray))

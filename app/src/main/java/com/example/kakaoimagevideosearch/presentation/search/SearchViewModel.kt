@@ -40,7 +40,8 @@ data class SearchState(
     val pagingDataFlow: Flow<PagingData<SearchResult>> = emptyFlow(), // 초기값으로 emptyFlow 사용
     // Flow 설정 실패 시의 에러 정보 (선택적)
     val setupError: Throwable? = null,
-    val searchCounter: Int = 0
+    val searchCounter: Int = 0,
+    val favoriteStatusFlow: Flow<List<SearchResult>> = emptyFlow()
 ) : BaseState {
     // BaseState에 apiError가 있다면 nullable로 변경하거나 제거 고려
     override val apiError: ApiError?
@@ -51,10 +52,13 @@ sealed class SearchEvent : BaseUiEvent {
     data class Search(val query: String) : SearchEvent()
     data class UpdateSearchInput(val input: String) : SearchEvent() // 검색어 입력 이벤트 추가
     data object Refresh : SearchEvent()
+    data class ToggleFavorite(val resultId: String) : SearchEvent() // 북마크 토글 이벤트 추가
+    data class LoadFavoriteStatus(val query: String) : SearchEvent() // 북마크 상태 로드 이벤트 추가
 }
 
 sealed class SearchEffect : BaseUiEffect {
     data class ShowError(val message: String) : SearchEffect()
+    data class FavoriteToggled(val resultId: String) : SearchEffect() // 북마크 토글 완료 이벤트 추가
 }
 
 class SearchViewModel @AssistedInject constructor(
@@ -82,6 +86,7 @@ class SearchViewModel @AssistedInject constructor(
         onEach(SearchState::query) { query ->
             if (query.isNotBlank()) {
                 executeSearch(query)
+                onEvent(SearchEvent.LoadFavoriteStatus(query))
             } else {
                 // 쿼리가 비어있으면 페이징 데이터 클리어
                 setState { 
@@ -172,6 +177,14 @@ class SearchViewModel @AssistedInject constructor(
                     }
                 }
             }
+            is SearchEvent.ToggleFavorite -> {
+                Log.d(TAG, "이벤트 처리: ToggleFavorite 이벤트 (resultId='${event.resultId}')")
+                toggleFavorite(event.resultId)
+            }
+            is SearchEvent.LoadFavoriteStatus -> {
+                Log.d(TAG, "이벤트 처리: LoadFavoriteStatus 이벤트 (쿼리='${event.query}')")
+                loadFavoriteStatus(event.query)
+            }
         }
     }
 
@@ -182,14 +195,24 @@ class SearchViewModel @AssistedInject constructor(
     }
 
     /**
-     * 검색 결과 ID로 좋아요 상태 토글
+     * 검색 결과 ID로 좋아요 상태 토글 (내부 메서드로 변경)
      */
-    fun toggleFavorite(resultId: String) {
+    private fun toggleFavorite(resultId: String) {
         viewModelScope.launch {
             try {
                 // 검색 Repository에서 좋아요 상태 토글
                 searchRepository.toggleFavorite(resultId)
                 Log.d(TAG, "좋아요 상태 변경 요청 완료: $resultId")
+                
+                // 북마크 토글 완료 이펙트 발행
+                sendEffect(SearchEffect.FavoriteToggled(resultId))
+                
+                // 현재 쿼리에 대한 좋아요 상태 다시 로드
+                withState { state ->
+                    if (state.query.isNotBlank()) {
+                        loadFavoriteStatus(state.query)
+                    }
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "좋아요 토글 중 오류 발생", e)
                 sendEffect(SearchEffect.ShowError("좋아요 상태 변경 중 오류가 발생했습니다."))
@@ -198,12 +221,15 @@ class SearchViewModel @AssistedInject constructor(
     }
 
     /**
-     * 특정 검색어에 대한 좋아요 상태 변경을 관찰하는 Flow
-     * UI에서 이 Flow를 구독하여 좋아요 상태 변경을 실시간으로 반영할 수 있음
+     * 특정 검색어에 대한 좋아요 상태 변경을 관찰하는 Flow 로드 (내부 메서드로 변경)
      */
-    fun getFavoriteStatusFlow(query: String): Flow<List<SearchResult>> {
-        return searchRepository.getCachedSearchResultsFlow(query)
+    private fun loadFavoriteStatus(query: String) {
+        if (query.isBlank()) return
+        
+        val favoriteStatusFlow = searchRepository.getCachedSearchResultsFlow(query)
             .map { entityList -> entityList.map { it } }
+            
+        setState { copy(favoriteStatusFlow = favoriteStatusFlow) }
     }
 
     @AssistedFactory
