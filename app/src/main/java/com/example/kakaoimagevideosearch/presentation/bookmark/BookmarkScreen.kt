@@ -18,11 +18,9 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -140,12 +138,7 @@ fun BookmarkScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(bookmarks) { bookmark ->
-                                BookmarkGridItem(
-                                    bookmark = bookmark,
-                                    onRemoveClick = {
-                                        viewModel.onEvent(BookmarkEvent.RemoveBookmark(bookmark))
-                                    }
-                                )
+                                BookmarkGridItem(bookmark = bookmark)
                             }
                         }
                     }
@@ -211,8 +204,7 @@ fun EmptyBookmarksPlaceholder(message: String) {
 
 @Composable
 fun BookmarkGridItem(
-    bookmark: SearchResult,
-    onRemoveClick: () -> Unit
+    bookmark: SearchResult
 ) {
     Box(
         modifier = Modifier
@@ -240,23 +232,6 @@ fun BookmarkGridItem(
                 text = if (bookmark.type == SearchResultType.IMAGE) "IMG" else "VID",
                 color = Color.White,
                 style = MaterialTheme.typography.labelSmall
-            )
-        }
-        
-        // 삭제 버튼 (우측 하단)
-        IconButton(
-            onClick = onRemoveClick,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(4.dp)
-                .size(32.dp)
-                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(50))
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Delete,
-                contentDescription = "삭제",
-                tint = Color.White,
-                modifier = Modifier.size(18.dp)
             )
         }
     }

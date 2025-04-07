@@ -30,7 +30,6 @@ data class BookmarkState(
 
 sealed class BookmarkEvent : BaseUiEvent {
     data object LoadBookmarks : BookmarkEvent()
-    data class RemoveBookmark(val searchResult: SearchResult) : BookmarkEvent()
 }
 
 sealed class BookmarkEffect : BaseUiEffect {
@@ -82,18 +81,6 @@ class BookmarkViewModel @AssistedInject constructor(
     override fun onEvent(event: BookmarkEvent) {
         when (event) {
             is BookmarkEvent.LoadBookmarks -> loadBookmarks()
-            is BookmarkEvent.RemoveBookmark -> removeBookmark(event.searchResult)
-        }
-    }
-    
-    private fun removeBookmark(searchResult: SearchResult) {
-        viewModelScope.launch {
-            try {
-                bookmarkRepository.removeBookmark(searchResult)
-                sendEffect(BookmarkEffect.ShowMessage("북마크가 삭제되었습니다."))
-            } catch (e: Exception) {
-                sendEffect(BookmarkEffect.ShowMessage("북마크 삭제 중 오류가 발생했습니다."))
-            }
         }
     }
 
