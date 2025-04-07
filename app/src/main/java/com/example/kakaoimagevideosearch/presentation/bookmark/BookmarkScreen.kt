@@ -1,44 +1,21 @@
 package com.example.kakaoimagevideosearch.presentation.bookmark
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import com.airbnb.mvrx.Async
 import com.airbnb.mvrx.Fail
 import com.airbnb.mvrx.Loading
 import com.airbnb.mvrx.Success
@@ -47,20 +24,49 @@ import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.example.kakaoimagevideosearch.domain.model.SearchResult
 import com.example.kakaoimagevideosearch.domain.model.SearchResultType
-import com.example.kakaoimagevideosearch.presentation.common.SearchResultItem
+import com.example.kakaoimagevideosearch.presentation.bookmark.components.BookmarkContent
+import com.example.kakaoimagevideosearch.presentation.bookmark.components.BookmarkErrorView
+import com.example.kakaoimagevideosearch.presentation.bookmark.components.BookmarkLoadingIndicator
+import com.example.kakaoimagevideosearch.presentation.bookmark.components.BookmarkTitle
+import com.example.kakaoimagevideosearch.presentation.bookmark.components.EmptyBookmarksPlaceholder
+import com.example.kakaoimagevideosearch.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
 
+/**
+ * 북마크 화면 메인 컴포넌트
+ */
 @Composable
 fun BookmarkScreen(
     viewModel: BookmarkViewModel = mavericksViewModel()
 ) {
     val state by viewModel.collectAsState()
+
+    BookmarkScreenContent(
+        bookmarksAsync = state.bookmarksAsync,
+        bookmarkCount = state.bookmarkCount,
+        effectFlow = viewModel.effect,
+        onLoadBookmarks = { viewModel.onEvent(BookmarkEvent.LoadBookmarks) }
+    )
+}
+
+/**
+ * 북마크 화면 내용 컴포넌트 - 상태 호이스팅 처리된 화면
+ */
+@Composable
+fun BookmarkScreenContent(
+    bookmarksAsync: Async<List<SearchResult>>,
+    bookmarkCount: Int,
+    effectFlow: Flow<BookmarkEffect>,
+    onLoadBookmarks: () -> Unit
+) {
     val gridState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
-    
-    // Side Effect 처리
-    LaunchedEffect(viewModel) {
-        viewModel.effect.collectLatest { effect ->
+
+    // 사이드 이펙트 처리
+    LaunchedEffect(effectFlow) {
+        effectFlow.collectLatest { effect ->
             when (effect) {
                 is BookmarkEffect.ShowMessage -> {
                     snackbarHostState.showSnackbar(
@@ -74,8 +80,8 @@ fun BookmarkScreen(
 
     // 초기화 시 북마크 로드 (필요한 경우)
     LaunchedEffect(Unit) {
-        if (state.bookmarksAsync is Uninitialized) {
-            viewModel.onEvent(BookmarkEvent.LoadBookmarks)
+        if (bookmarksAsync is Uninitialized) {
+            onLoadBookmarks()
         }
     }
 
@@ -89,13 +95,9 @@ fun BookmarkScreen(
                 .padding(horizontal = 16.dp)
         ) {
             // 북마크 타이틀
-            Text(
-                text = "북마크 (${state.bookmarkCount})",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
+            BookmarkTitle(count = bookmarkCount)
             
-            when (val bookmarksAsync = state.bookmarksAsync) {
+            when (bookmarksAsync) {
                 is Uninitialized -> {
                     // 초기 상태 - 안내 메시지 표시
                     EmptyBookmarksPlaceholder(
@@ -104,25 +106,7 @@ fun BookmarkScreen(
                 }
                 is Loading -> {
                     // 로딩 중 상태
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "북마크 불러오는 중...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                            )
-                        }
-                    }
+                    BookmarkLoadingIndicator()
                 }
                 is Success -> {
                     val bookmarks = bookmarksAsync()
@@ -131,77 +115,92 @@ fun BookmarkScreen(
                             message = "저장된 북마크가 없습니다."
                         )
                     } else {
-                        LazyVerticalGrid(
-                            state = gridState,
-                            columns = GridCells.Fixed(2),
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(bookmarks) { bookmark ->
-                                SearchResultItem(
-                                    item = bookmark,
-                                    showFavoriteButton = false // 북마크 화면에서는 하트 버튼 표시 안 함
-                                )
-                            }
-                        }
+                        BookmarkContent(
+                            bookmarks = bookmarks,
+                            gridState = gridState
+                        )
                     }
                 }
                 is Fail -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "북마크 로딩 실패: ${bookmarksAsync.error.message ?: "알 수 없는 오류"}",
-                            color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        Button(
-                            onClick = { viewModel.onEvent(BookmarkEvent.LoadBookmarks) }
-                        ) {
-                            Text("다시 시도")
-                        }
-                    }
+                    BookmarkErrorView(
+                        errorMessage = bookmarksAsync.error.message ?: "알 수 없는 오류",
+                        onRetry = onLoadBookmarks
+                    )
                 }
             }
         }
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-fun EmptyBookmarksPlaceholder(message: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Favorite,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "북마크 화면",
-                style = MaterialTheme.typography.headlineSmall,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-            )
-        }
+fun BookmarkScreenContentEmptyPreview() {
+    MyApplicationTheme {
+        BookmarkScreenContent(
+            bookmarksAsync = Success(emptyList()),
+            bookmarkCount = 0,
+            effectFlow = emptyFlow(),
+            onLoadBookmarks = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BookmarkScreenContentItemsPreview() {
+    MyApplicationTheme {
+        BookmarkScreenContent(
+            bookmarksAsync = Success(
+                listOf(
+                    SearchResult(
+                        id = "1",
+                        thumbnailUrl = "https://example.com/image.jpg",
+                        title = "예시 이미지 제목",
+                        source = "예시 사이트",
+                        datetime = "2023-05-01T12:00:00.000+09:00",
+                        type = SearchResultType.IMAGE,
+                        isFavorite = true
+                    ),
+                    SearchResult(
+                        id = "2",
+                        thumbnailUrl = "https://example.com/video.jpg",
+                        title = "예시 비디오 제목",
+                        source = "예시 비디오 사이트",
+                        datetime = "2023-05-02T15:30:00.000+09:00",
+                        type = SearchResultType.VIDEO,
+                        isFavorite = true
+                    )
+                )
+            ),
+            bookmarkCount = 2,
+            effectFlow = emptyFlow(),
+            onLoadBookmarks = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BookmarkScreenContentLoadingPreview() {
+    MyApplicationTheme {
+        BookmarkScreenContent(
+            bookmarksAsync = Loading(),
+            bookmarkCount = 0,
+            effectFlow = emptyFlow(),
+            onLoadBookmarks = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BookmarkScreenContentErrorPreview() {
+    MyApplicationTheme {
+        BookmarkScreenContent(
+            bookmarksAsync = Fail(Exception("네트워크 오류")),
+            bookmarkCount = 0,
+            effectFlow = emptyFlow(),
+            onLoadBookmarks = {}
+        )
     }
 } 
