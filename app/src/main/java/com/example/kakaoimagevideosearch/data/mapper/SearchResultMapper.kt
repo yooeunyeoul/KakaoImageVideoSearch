@@ -10,7 +10,7 @@ import java.util.Locale
 import java.util.UUID
 
 fun ImageDocument.toDomain() = SearchResult(
-    id = UUID.randomUUID().toString(),
+    id = thumbnailUrl,
     thumbnailUrl = thumbnailUrl,
     title = displaySitename,
     source = docUrl,
@@ -19,7 +19,7 @@ fun ImageDocument.toDomain() = SearchResult(
 )
 
 fun VideoDocument.toDomain() = SearchResult(
-    id = UUID.randomUUID().toString(),
+    id = url,
     thumbnailUrl = thumbnail,
     title = title,
     source = url,

@@ -59,7 +59,6 @@ sealed class SearchEffect : BaseUiEffect {
 class SearchViewModel @AssistedInject constructor(
     @Assisted initialState: SearchState,
     private val searchRepository: SearchRepository,
-    private val bookmarkRepository: BookmarkRepository
 ) : BaseMviViewModel<SearchState, SearchEvent, SearchEffect>(initialState) {
 
     companion object : MavericksViewModelFactory<SearchViewModel, SearchState> by hiltMavericksViewModelFactory() {

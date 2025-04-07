@@ -27,6 +27,7 @@ class CachingAwarePagingSource @Inject constructor(
 
     companion object {
         private const val TAG = "CachingPagingSource"
+        private const val PAGE_SIZE = 20 // 페이지 당 아이템 수 (CachedSearchRepository와 동일하게 유지)
     }
 
     override fun getRefreshKey(state: PagingState<Int, SearchResult>): Int? {
@@ -50,8 +51,13 @@ class CachingAwarePagingSource @Inject constructor(
                 if (cachedResults.isNotEmpty()) {
                     Log.d(TAG, "유효한 캐시 데이터 사용: 쿼리='$query', 페이지=$page, 결과 수=${cachedResults.size}")
 
-                    // 다음 페이지 키 설정
-                    val nextKey = page + 1
+                    // 다음 페이지 키 설정 - 결과 크기가 페이지 크기보다 작으면 마지막 페이지로 간주
+                    val nextKey = if (cachedResults.size < PAGE_SIZE) {
+                        Log.d(TAG, "페이지 $page 결과가 $PAGE_SIZE 미만(${cachedResults.size}개)이므로 마지막 페이지로 간주")
+                        null // 마지막 페이지
+                    } else {
+                        page + 1 // 다음 페이지 있음
+                    }
 
                     return LoadResult.Page(
                         data = cachedResults.map { it.toDomain() },
@@ -80,8 +86,18 @@ class CachingAwarePagingSource @Inject constructor(
             )
 
             // 결과가 성공적으로 로드되면 캐시 업데이트를 위한 콜백 호출
-            if (result is LoadResult.Page && result.data.isNotEmpty()) {
-                onPageLoaded(result.data, page)
+            if (result is LoadResult.Page) {
+                if (result.data.isNotEmpty()) {
+                    Log.d(TAG, "API 호출 성공, 데이터 캐싱: 쿼리='$query', 페이지=$page, 결과 수=${result.data.size}")
+                    onPageLoaded(result.data, page)
+                    
+                    // 마지막 페이지 여부 확인 로그 추가
+                    if (result.nextKey == null) {
+                        Log.d(TAG, "API 호출 결과가 마지막 페이지로 확인됨: 쿼리='$query', 페이지=$page")
+                    }
+                } else {
+                    Log.d(TAG, "API 호출 성공했으나 결과 없음: 쿼리='$query', 페이지=$page")
+                }
             }
 
             return result

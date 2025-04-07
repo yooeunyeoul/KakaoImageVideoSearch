@@ -20,7 +20,7 @@ class SearchPagingSource @Inject constructor(
     companion object {
         private const val STARTING_PAGE_INDEX = 1
         // 각 API별로 가져올 크기. 한 페이지 로드 시 최대 2 * PAGE_SIZE 만큼의 아이템이 로드될 수 있음.
-        private const val PAGE_SIZE = 10 // 예시로 줄임 (기존 20) -> 필요시 조정
+        private const val PAGE_SIZE = 20 // CachedSearchRepository와 일치
         private const val TAG = "SearchPagingSource"
     }
 

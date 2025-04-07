@@ -95,9 +95,27 @@ class CachedSearchRepository @Inject constructor(
                     searchDao.clearExpiredCache()
                 }
                 
-                // 이 페이지의 결과를 캐시에 저장
-                val entities = results.map { SearchResultEntity.fromDomain(it, query, page) }
-                searchDao.insertSearchResults(entities)
+                // 기존 검색 결과에서 썸네일 URL 목록 조회
+                val existingThumbnailUrls = searchDao.getThumbnailUrlsByQuery(query)
+                    ?.map { it.thumbnailUrl }
+                    ?.toSet() ?: emptySet()
+                
+                // 중복되지 않는 결과만 필터링
+                val filteredResults = results.filter { result -> 
+                    // 썸네일 URL이 기존 데이터에 없는 경우만 포함
+                    result.thumbnailUrl !in existingThumbnailUrls
+                }
+                
+                // 필터링된 항목의 수 로그
+                Log.d(TAG, "중복 제거 후 저장할 결과 수: 원본=${results.size}, 필터링 후=${filteredResults.size}")
+                
+                if (filteredResults.isNotEmpty()) {
+                    // 이 페이지의 결과를 캐시에 저장 (중복 제거 후)
+                    val entities = filteredResults.map { SearchResultEntity.fromDomain(it, query, page) }
+                    searchDao.insertSearchResults(entities)
+                } else {
+                    Log.d(TAG, "저장할 새로운 결과 없음 (모두 중복)")
+                }
                 
             } catch (e: Exception) {
                 Log.e(TAG, "캐시 저장 중 오류 발생: 쿼리='$query', 페이지=$page", e)

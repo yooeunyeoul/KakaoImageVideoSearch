@@ -163,4 +163,16 @@ interface SearchDao {
      */
     @Update
     suspend fun updateSearchResult(result: SearchResultEntity)
-} 
+    
+    /**
+     * 특정 검색어에 대한 검색 결과들의 썸네일 URL 목록 조회
+     */
+    @Query("SELECT id, thumbnailUrl FROM search_results WHERE `query` = :query")
+    suspend fun getThumbnailUrlsByQuery(query: String): List<ThumbnailResult>?
+}
+
+// 썸네일 URL만 가져오기 위한 투영 클래스
+data class ThumbnailResult(
+    val id: String,
+    val thumbnailUrl: String
+) 
