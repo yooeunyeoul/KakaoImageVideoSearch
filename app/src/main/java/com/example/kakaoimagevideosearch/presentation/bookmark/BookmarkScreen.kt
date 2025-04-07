@@ -47,6 +47,7 @@ import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.example.kakaoimagevideosearch.domain.model.SearchResult
 import com.example.kakaoimagevideosearch.domain.model.SearchResultType
+import com.example.kakaoimagevideosearch.presentation.common.SearchResultItem
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -138,7 +139,10 @@ fun BookmarkScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(bookmarks) { bookmark ->
-                                BookmarkGridItem(bookmark = bookmark)
+                                SearchResultItem(
+                                    item = bookmark,
+                                    showFavoriteButton = false // 북마크 화면에서는 하트 버튼 표시 안 함
+                                )
                             }
                         }
                     }
@@ -197,41 +201,6 @@ fun EmptyBookmarksPlaceholder(message: String) {
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-            )
-        }
-    }
-}
-
-@Composable
-fun BookmarkGridItem(
-    bookmark: SearchResult
-) {
-    Box(
-        modifier = Modifier
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        // 이미지 표시
-        AsyncImage(
-            model = bookmark.thumbnailUrl,
-            contentDescription = bookmark.title,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // 타입 표시 (좌측 하단)
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(6.dp)
-                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(4.dp))
-                .padding(horizontal = 6.dp, vertical = 2.dp)
-        ) {
-            Text(
-                text = if (bookmark.type == SearchResultType.IMAGE) "IMG" else "VID",
-                color = Color.White,
-                style = MaterialTheme.typography.labelSmall
             )
         }
     }
