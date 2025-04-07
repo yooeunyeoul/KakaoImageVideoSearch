@@ -46,7 +46,7 @@ data class SearchState(
 sealed class SearchEvent : BaseUiEvent {
     data class Search(val query: String) : SearchEvent()
     data class UpdateSearchInput(val input: String) : SearchEvent() // 검색어 입력 이벤트 추가
-    object Refresh : SearchEvent()
+    data object Refresh : SearchEvent()
 }
 
 sealed class SearchEffect : BaseUiEffect {
