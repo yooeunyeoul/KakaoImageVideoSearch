@@ -25,11 +25,12 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 data class SearchState(
     val query: String = "",
+    val searchTextInput: String = "", // 입력 중인 검색어 (debounce 적용 전)
     // 검색 Flow 설정 작업의 상태 (초기 페이징 로드 상태가 아님)
     val searchSetupAsync: Async<Unit> = Uninitialized,
     // PagingData를 방출하는 Flow 자체를 상태로 관리
@@ -44,6 +45,7 @@ data class SearchState(
 
 sealed class SearchEvent : BaseUiEvent {
     data class Search(val query: String) : SearchEvent()
+    data class UpdateSearchInput(val input: String) : SearchEvent() // 검색어 입력 이벤트 추가
     object Refresh : SearchEvent()
 }
 
@@ -58,11 +60,21 @@ class SearchViewModel @AssistedInject constructor(
 
     companion object : MavericksViewModelFactory<SearchViewModel, SearchState> by hiltMavericksViewModelFactory() {
         private const val TAG = "SearchViewModel"
+        private const val SEARCH_DEBOUNCE_MS = 500L // 검색 디바운스 시간 (500ms)
     }
 
     init {
         Log.d(TAG, "SearchViewModel 초기화")
-        // query가 변경되면 자동으로 검색 실행 (Debounce 등을 추가하면 더 좋음)
+        
+        // 검색어 입력 텍스트 상태에 debounce 적용하여 자동 검색
+        onEach(SearchState::searchTextInput) { input ->
+            if (input.isNotBlank()) {
+                // debounce 적용하여 쿼리 업데이트
+                debounceSearchInput(input)
+            }
+        }
+        
+        // 쿼리가 변경되면 실제 검색 실행
         onEach(SearchState::query) { query ->
             Log.d(TAG, "쿼리 변경 감지: '$query'")
             if (query.isNotBlank()) {
@@ -71,6 +83,18 @@ class SearchViewModel @AssistedInject constructor(
                 // 쿼리가 비어있으면 페이징 데이터 클리어
                 Log.d(TAG, "쿼리가 비어있어 페이징 데이터 초기화")
                 setState { copy(pagingDataFlow = emptyFlow(), searchSetupAsync = Uninitialized, setupError = null) }
+            }
+        }
+    }
+    
+    private fun debounceSearchInput(input: String) {
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(SEARCH_DEBOUNCE_MS)
+            withState { state ->
+                // 현재 입력과 디바운스 완료 후의 입력이 같은 경우에만 검색 실행
+                if (state.searchTextInput == input) {
+                    setState { copy(query = input) }
+                }
             }
         }
     }
@@ -117,7 +141,16 @@ class SearchViewModel @AssistedInject constructor(
         when (event) {
             is SearchEvent.Search -> {
                 Log.d(TAG, "이벤트 처리: Search 이벤트 (쿼리='${event.query}')")
-                setState { copy(query = event.query) }
+                setState { 
+                    copy(
+                        searchTextInput = event.query,
+                        query = event.query
+                    ) 
+                }
+            }
+            is SearchEvent.UpdateSearchInput -> {
+                Log.d(TAG, "이벤트 처리: UpdateSearchInput 이벤트 (입력='${event.input}')")
+                setState { copy(searchTextInput = event.input) }
             }
             is SearchEvent.Refresh -> {
                 withState { state ->

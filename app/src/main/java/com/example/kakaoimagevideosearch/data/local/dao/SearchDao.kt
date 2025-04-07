@@ -135,6 +135,24 @@ interface SearchDao {
     fun getSearchResultsByPageFlow(query: String, page: Int): Flow<List<SearchResultEntity>>
     
     /**
+     * 유효한 캐시에서 페이지 데이터 조회 (한 번의 쿼리로 유효성과 데이터 확인)
+     * 캐시가 유효하지 않거나 해당 페이지 데이터가 없으면 빈 리스트 반환
+     */
+    @Query("""
+        SELECT results.* FROM search_results results
+        JOIN search_cache_info info ON results.`query` = info.`query` 
+        WHERE results.`query` = :query 
+        AND results.page = :page
+        AND info.expirationTimeMs > :currentTime
+        ORDER BY results.datetime DESC
+    """)
+    suspend fun getValidCachePageResults(
+        query: String, 
+        page: Int, 
+        currentTime: Long = System.currentTimeMillis()
+    ): List<SearchResultEntity>
+    
+    /**
      * ID로 검색 결과 조회
      */
     @Query("SELECT * FROM search_results WHERE id = :id")

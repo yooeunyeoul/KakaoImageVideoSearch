@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
     }
 }
 
@@ -106,7 +107,6 @@ fun SearchScreen(
     val lazyPagingItems: LazyPagingItems<SearchResult> = state.pagingDataFlow.collectAsLazyPagingItems()
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() } // SnackbarHostState 사용
-    var searchQuery by remember { mutableStateOf("") }
     val gridState = rememberLazyGridState() // LazyGridState 사용
 
     // 좋아요 상태 Flow 구독
@@ -157,44 +157,24 @@ fun SearchScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
-            // 검색 UI Row
-            Row(
+            // 검색 UI - 검색 버튼 제거
+            OutlinedTextField(
+                value = state.searchTextInput,
+                onValueChange = { 
+                    // 텍스트 입력 변경 시 UpdateSearchInput 이벤트 전송
+                    viewModel.onEvent(SearchEvent.UpdateSearchInput(it))
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("검색어를 입력하세요") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = {
-                        if (searchQuery.isNotBlank()) {
-                            viewModel.onEvent(SearchEvent.Search(searchQuery))
-                            focusManager.clearFocus()
-                        }
-                    })
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        if (searchQuery.isNotBlank()) {
-                            viewModel.onEvent(SearchEvent.Search(searchQuery))
-                            focusManager.clearFocus()
-                        }
-                    },
-                    enabled = state.searchSetupAsync !is Loading
-                ) {
-                    if (state.searchSetupAsync is Loading) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                    } else {
-                        Text("검색")
-                    }
-                }
-            }
+                placeholder = { Text("검색어를 입력하세요") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = {
+                    // 키보드 검색 버튼 클릭 시 포커스만 제거
+                    focusManager.clearFocus()
+                })
+            )
 
             // Flow 설정 에러 Text
             if (state.searchSetupAsync is Fail) {
@@ -203,6 +183,18 @@ fun SearchScreen(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
+            }
+
+            // 로딩 상태 표시
+            if (state.searchSetupAsync is Loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                }
             }
 
             // LazyVerticalGrid 사용
