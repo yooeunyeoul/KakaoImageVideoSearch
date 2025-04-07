@@ -28,7 +28,6 @@ class CachingAwarePagingSource @Inject constructor(
 ) : PagingSource<Int, SearchResult>() {
     
     companion object {
-        private const val PAGE_SIZE = 20
         private const val TAG = "CachingPagingSource"
     }
     
