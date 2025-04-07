@@ -31,7 +31,8 @@ data class BookmarkEntity(
         title = title,
         source = source,
         datetime = datetime,
-        type = type
+        type = type,
+        isFavorite = true  // 북마크된 항목은 항상 isFavorite=true
     )
 
     companion object {

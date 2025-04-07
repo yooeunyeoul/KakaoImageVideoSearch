@@ -13,6 +13,7 @@ import com.example.kakaoimagevideosearch.data.paging.SearchPagingSource
 import com.example.kakaoimagevideosearch.di.ApplicationScope
 import com.example.kakaoimagevideosearch.domain.model.SearchResult
 import com.example.kakaoimagevideosearch.domain.repository.SearchRepository
+import com.example.kakaoimagevideosearch.domain.repository.BookmarkRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -24,6 +25,7 @@ import javax.inject.Singleton
 class CachedSearchRepository @Inject constructor(
     private val api: KakaoSearchApi,
     private val searchDao: SearchDao,
+    private val bookmarkRepository: BookmarkRepository,
     @ApplicationScope private val externalScope: CoroutineScope
 ) : SearchRepository {
 
@@ -132,12 +134,22 @@ class CachedSearchRepository @Inject constructor(
             val result = searchDao.getSearchResultById(resultId) ?: return
             
             // 좋아요 상태 토글
-            val updatedResult = result.copy(isFavorite = !result.isFavorite)
+            val isFavorite = !result.isFavorite
+            val updatedResult = result.copy(isFavorite = isFavorite)
             
             // 업데이트된 항목 저장
             searchDao.updateSearchResult(updatedResult)
             
-            Log.d(TAG, "좋아요 상태 토글: ID=$resultId, 새 상태=${updatedResult.isFavorite}")
+            // 북마크 정보도 함께 업데이트
+            if (isFavorite) {
+                // 좋아요 -> 북마크 추가
+                bookmarkRepository.addBookmark(updatedResult.toDomain())
+            } else {
+                // 좋아요 해제 -> 북마크 제거
+                bookmarkRepository.removeBookmarkById(resultId)
+            }
+            
+            Log.d(TAG, "좋아요 상태 토글: ID=$resultId, 새 상태=$isFavorite")
         } catch (e: Exception) {
             Log.e(TAG, "좋아요 상태 토글 중 오류 발생: ID=$resultId", e)
         }

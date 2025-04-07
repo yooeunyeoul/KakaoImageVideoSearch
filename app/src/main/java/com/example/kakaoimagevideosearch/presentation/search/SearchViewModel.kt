@@ -18,13 +18,16 @@ import com.example.kakaoimagevideosearch.base.BaseUiEvent
 import com.example.kakaoimagevideosearch.domain.model.ApiError
 import com.example.kakaoimagevideosearch.domain.model.SearchResult
 import com.example.kakaoimagevideosearch.domain.repository.SearchRepository
+import com.example.kakaoimagevideosearch.domain.repository.BookmarkRepository
 import com.example.kakaoimagevideosearch.utils.ApiException
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -55,7 +58,8 @@ sealed class SearchEffect : BaseUiEffect {
 
 class SearchViewModel @AssistedInject constructor(
     @Assisted initialState: SearchState,
-    private val searchRepository: SearchRepository
+    private val searchRepository: SearchRepository,
+    private val bookmarkRepository: BookmarkRepository
 ) : BaseMviViewModel<SearchState, SearchEvent, SearchEffect>(initialState) {
 
     companion object : MavericksViewModelFactory<SearchViewModel, SearchState> by hiltMavericksViewModelFactory() {
@@ -176,8 +180,14 @@ class SearchViewModel @AssistedInject constructor(
      */
     fun toggleFavorite(resultId: String) {
         viewModelScope.launch {
-            searchRepository.toggleFavorite(resultId)
-            // 필요하면 UI 갱신을 위해 State를 업데이트할 수도 있음
+            try {
+                // 검색 Repository에서 좋아요 상태 토글
+                searchRepository.toggleFavorite(resultId)
+                Log.d(TAG, "좋아요 상태 변경 요청 완료: $resultId")
+            } catch (e: Exception) {
+                Log.e(TAG, "좋아요 토글 중 오류 발생", e)
+                sendEffect(SearchEffect.ShowError("좋아요 상태 변경 중 오류가 발생했습니다."))
+            }
         }
     }
 

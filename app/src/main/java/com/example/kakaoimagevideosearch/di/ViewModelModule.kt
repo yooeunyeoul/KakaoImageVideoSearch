@@ -3,6 +3,7 @@ package com.example.kakaoimagevideosearch.di
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.MavericksViewModelComponent
 import com.airbnb.mvrx.hilt.ViewModelKey
+import com.example.kakaoimagevideosearch.presentation.bookmark.BookmarkViewModel
 import com.example.kakaoimagevideosearch.presentation.search.SearchViewModel
 import dagger.Binds
 import dagger.Module
@@ -17,4 +18,9 @@ interface ViewModelModule {
     @IntoMap
     @ViewModelKey(SearchViewModel::class)
     fun searchViewModelFactory(factory: SearchViewModel.Factory): AssistedViewModelFactory<*, *>
+    
+    @Binds
+    @IntoMap
+    @ViewModelKey(BookmarkViewModel::class)
+    fun bookmarkViewModelFactory(factory: BookmarkViewModel.Factory): AssistedViewModelFactory<*, *>
 } 

@@ -8,10 +8,12 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +26,9 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -42,12 +47,15 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +76,7 @@ import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.example.kakaoimagevideosearch.domain.model.SearchResult
 import com.example.kakaoimagevideosearch.domain.model.SearchResultType
+import com.example.kakaoimagevideosearch.presentation.bookmark.BookmarkScreen
 import com.example.kakaoimagevideosearch.presentation.search.SearchEffect
 import com.example.kakaoimagevideosearch.presentation.search.SearchEvent
 import com.example.kakaoimagevideosearch.presentation.search.SearchViewModel
@@ -76,6 +85,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -87,11 +97,69 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    SearchScreen()
+                    MainScreen()
                 }
             }
         }
+    }
+}
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun MainScreen() {
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val coroutineScope = rememberCoroutineScope()
+    
+    Column(modifier = Modifier.fillMaxSize()) {
+        // 탭 바
+        TabRow(
+            selectedTabIndex = pagerState.currentPage,
+        ) {
+            Tab(
+                selected = pagerState.currentPage == 0,
+                onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
+                text = { Text("검색") }
+            )
+            Tab(
+                selected = pagerState.currentPage == 1,
+                onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
+                text = { Text("북마크") }
+            )
+        }
+        
+        // 페이저
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            when (page) {
+                0 -> SearchScreen()
+                1 -> BookmarkScreen()
+            }
+        }
+        
+        // 페이지 인디케이터
+        Row(
+            Modifier
+                .padding(8.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(2) { iteration ->
+                val color = if (pagerState.currentPage == iteration) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                )
+            }
+        }
     }
 }
 
