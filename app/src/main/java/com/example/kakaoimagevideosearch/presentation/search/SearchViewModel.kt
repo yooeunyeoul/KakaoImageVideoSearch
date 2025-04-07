@@ -39,7 +39,8 @@ data class SearchState(
     // PagingData를 방출하는 Flow 자체를 상태로 관리
     val pagingDataFlow: Flow<PagingData<SearchResult>> = emptyFlow(), // 초기값으로 emptyFlow 사용
     // Flow 설정 실패 시의 에러 정보 (선택적)
-    val setupError: Throwable? = null
+    val setupError: Throwable? = null,
+    val searchCounter: Int = 0
 ) : BaseState {
     // BaseState에 apiError가 있다면 nullable로 변경하거나 제거 고려
     override val apiError: ApiError?
@@ -79,13 +80,17 @@ class SearchViewModel @AssistedInject constructor(
         
         // 쿼리가 변경되면 실제 검색 실행
         onEach(SearchState::query) { query ->
-            Log.d(TAG, "쿼리 변경 감지: '$query'")
             if (query.isNotBlank()) {
                 executeSearch(query)
             } else {
                 // 쿼리가 비어있으면 페이징 데이터 클리어
-                Log.d(TAG, "쿼리가 비어있어 페이징 데이터 초기화")
-                setState { copy(pagingDataFlow = emptyFlow(), searchSetupAsync = Uninitialized, setupError = null) }
+                setState { 
+                    copy(
+                        pagingDataFlow = emptyFlow(), 
+                        searchSetupAsync = Uninitialized, 
+                        setupError = null
+                    ) 
+                }
             }
         }
     }
@@ -103,21 +108,23 @@ class SearchViewModel @AssistedInject constructor(
     }
 
     private fun executeSearch(query: String) {
-        Log.d(TAG, "executeSearch 호출: 쿼리='$query'")
-        
-        // 검색 시작 시 상태 업데이트 (로딩 상태 표시 - Flow 설정 단계)
-        setState { copy(searchSetupAsync = Loading(), setupError = null) }
+        // 먼저 로딩 상태로 변경하고 이전 페이징 데이터 초기화
+        setState { 
+            copy(
+                searchSetupAsync = Loading(), 
+                setupError = null,
+                pagingDataFlow = emptyFlow(),
+                searchCounter = searchCounter + 1
+            ) 
+        }
 
         try {
             // Repository에서 Flow를 가져와서 State에 설정
             // cachedIn은 ViewModelScope 내에서 호출되어야 Flow가 유지됨
-            Log.d(TAG, "페이징 데이터 Flow 요청 시작: 쿼리='$query'")
             val newPagingFlow = searchRepository.getSearchResults(query)
                 .cachedIn(viewModelScope) // ViewModelScope에서 캐싱
                 .distinctUntilChanged() // 중복 발행 방지를 위해 추가
             
-            Log.d(TAG, "페이징 데이터 Flow 설정 완료: 쿼리='$query'")
-
             setState {
                 copy(
                     pagingDataFlow = newPagingFlow,

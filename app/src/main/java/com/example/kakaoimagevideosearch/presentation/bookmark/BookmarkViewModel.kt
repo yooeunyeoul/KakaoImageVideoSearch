@@ -1,6 +1,5 @@
 package com.example.kakaoimagevideosearch.presentation.bookmark
 
-import android.util.Log
 import com.airbnb.mvrx.Async
 import com.airbnb.mvrx.Loading
 import com.airbnb.mvrx.MavericksViewModelFactory
@@ -18,10 +17,7 @@ import com.example.kakaoimagevideosearch.domain.repository.BookmarkRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 data class BookmarkState(
@@ -46,17 +42,11 @@ class BookmarkViewModel @AssistedInject constructor(
     private val bookmarkRepository: BookmarkRepository
 ) : BaseMviViewModel<BookmarkState, BookmarkEvent, BookmarkEffect>(initialState) {
 
-    companion object : MavericksViewModelFactory<BookmarkViewModel, BookmarkState> by hiltMavericksViewModelFactory() {
-        private const val TAG = "BookmarkViewModel"
-    }
+    companion object : MavericksViewModelFactory<BookmarkViewModel, BookmarkState> by hiltMavericksViewModelFactory()
 
     init {
-        Log.d(TAG, "BookmarkViewModel 초기화")
-        
-        // 북마크 목록 로드
         loadBookmarks()
         
-        // 북마크 개수 관찰
         viewModelScope.launch {
             bookmarkRepository.getBookmarkCount().collectLatest { count ->
                 setState { copy(bookmarkCount = count) }
@@ -78,7 +68,6 @@ class BookmarkViewModel @AssistedInject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "북마크 로딩 오류", e)
                 setState { 
                     copy(
                         bookmarksAsync = com.airbnb.mvrx.Fail(e),
@@ -92,12 +81,8 @@ class BookmarkViewModel @AssistedInject constructor(
     
     override fun onEvent(event: BookmarkEvent) {
         when (event) {
-            is BookmarkEvent.LoadBookmarks -> {
-                loadBookmarks()
-            }
-            is BookmarkEvent.RemoveBookmark -> {
-                removeBookmark(event.searchResult)
-            }
+            is BookmarkEvent.LoadBookmarks -> loadBookmarks()
+            is BookmarkEvent.RemoveBookmark -> removeBookmark(event.searchResult)
         }
     }
     
@@ -107,7 +92,6 @@ class BookmarkViewModel @AssistedInject constructor(
                 bookmarkRepository.removeBookmark(searchResult)
                 sendEffect(BookmarkEffect.ShowMessage("북마크가 삭제되었습니다."))
             } catch (e: Exception) {
-                Log.e(TAG, "북마크 삭제 오류", e)
                 sendEffect(BookmarkEffect.ShowMessage("북마크 삭제 중 오류가 발생했습니다."))
             }
         }

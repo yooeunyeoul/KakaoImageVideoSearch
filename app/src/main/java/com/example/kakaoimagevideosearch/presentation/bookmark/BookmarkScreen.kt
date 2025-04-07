@@ -1,6 +1,5 @@
 package com.example.kakaoimagevideosearch.presentation.bookmark
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -92,37 +90,9 @@ fun BookmarkScreen(
             when (val bookmarksAsync = state.bookmarksAsync) {
                 is Uninitialized -> {
                     // 초기 상태 - 안내 메시지 표시
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Favorite,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "북마크 화면",
-                                style = MaterialTheme.typography.headlineSmall,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "검색 화면에서 하트 아이콘을 눌러 좋아하는 콘텐츠를 북마크에 저장하세요",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                            )
-                        }
-                    }
+                    EmptyBookmarksPlaceholder(
+                        message = "검색 화면에서 하트 아이콘을 눌러 좋아하는 콘텐츠를 북마크에 저장하세요"
+                    )
                 }
                 is Loading -> {
                     // 로딩 중 상태
@@ -149,15 +119,9 @@ fun BookmarkScreen(
                 is Success -> {
                     val bookmarks = bookmarksAsync()
                     if (bookmarks.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "저장된 북마크가 없습니다.",
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                        EmptyBookmarksPlaceholder(
+                            message = "저장된 북마크가 없습니다."
+                        )
                     } else {
                         LazyVerticalGrid(
                             state = gridState,
@@ -167,9 +131,7 @@ fun BookmarkScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(bookmarks) { bookmark ->
-                                BookmarkGridItem(
-                                    bookmark = bookmark
-                                )
+                                BookmarkGridItem(bookmark = bookmark)
                             }
                         }
                     }
@@ -194,6 +156,41 @@ fun BookmarkScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun EmptyBookmarksPlaceholder(message: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Favorite,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "북마크 화면",
+                style = MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
         }
     }
 }
