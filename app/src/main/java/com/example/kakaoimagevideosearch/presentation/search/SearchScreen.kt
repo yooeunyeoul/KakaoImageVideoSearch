@@ -2,6 +2,8 @@
 
 package com.example.kakaoimagevideosearch.presentation.search
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,12 +42,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.airbnb.mvrx.Fail
 import com.airbnb.mvrx.Loading
 import com.airbnb.mvrx.compose.collectAsState
@@ -65,6 +65,7 @@ import com.airbnb.mvrx.compose.mavericksViewModel
 import com.example.kakaoimagevideosearch.domain.model.SearchResult
 import com.example.kakaoimagevideosearch.domain.model.SearchResultType
 import kotlinx.coroutines.flow.collectLatest
+import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun SearchScreen(
@@ -79,27 +80,7 @@ fun SearchScreen(
     
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
-
-    // 스크롤 위치를 rememberSaveable로 저장
-    var savedScrollPosition by rememberSaveable { mutableStateOf(0) }
-    val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = savedScrollPosition)
-
-    // 스크롤 위치 변경 감지 및 저장
-    LaunchedEffect(Unit) {
-        snapshotFlow { gridState.firstVisibleItemIndex }
-            .collect { index ->
-                if (index > 0) {
-                    savedScrollPosition = index
-                }
-            }
-    }
-
-    // 컴포저블이 재구성될 때마다 스크롤 상태 복원
-    LaunchedEffect(savedScrollPosition) {
-        if (savedScrollPosition > 0 && gridState.firstVisibleItemIndex == 0) {
-            gridState.scrollToItem(savedScrollPosition)
-        }
-    }
+    val gridState = rememberLazyGridState()
 
     val favoriteStatuses by state.favoriteStatusFlow.collectAsState(initial = emptyList())
 
@@ -273,18 +254,60 @@ fun GridSearchResultItem(
     isFavorite: Boolean,
     onFavoriteClick: () -> Unit
 ) {
+    // fade in 애니메이션을 위한 상태
+    var visible by remember { mutableStateOf(false) }
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 500),
+        label = "alpha"
+    )
+    
+    // 컴포넌트가 처음 렌더링될 때 애니메이션 시작
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+    
     Box(
         modifier = Modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
+            .graphicsLayer { 
+                this.alpha = alpha 
+            }
     ) {
-        AsyncImage(
+        SubcomposeAsyncImage(
             model = item.thumbnailUrl,
             contentDescription = item.title,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            loading = {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         )
+
+        // 날짜 표시 영역 추가
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(6.dp)
+                .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
+                .padding(horizontal = 6.dp, vertical = 2.dp)
+        ) {
+            Text(
+                text = item.datetime.take(10), // yyyy-MM-dd 부분만 사용
+                color = Color.White,
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
 
         Box(
             modifier = Modifier
@@ -300,19 +323,20 @@ fun GridSearchResultItem(
             )
         }
 
+        // 하트 아이콘 크기 수정
         IconButton(
             onClick = onFavoriteClick,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(4.dp)
-                .size(32.dp)
-                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(50))
+                .size(28.dp) // 크기 축소
+                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(14.dp)) // 반지름 절반으로
         ) {
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 contentDescription = "좋아요",
                 tint = if (isFavorite) Color.Red else Color.White,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(14.dp) // 아이콘 크기도 축소
             )
         }
     }

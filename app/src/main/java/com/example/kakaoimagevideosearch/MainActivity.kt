@@ -24,7 +24,6 @@ import com.example.kakaoimagevideosearch.presentation.search.SearchScreen
 import com.example.kakaoimagevideosearch.ui.theme.MyApplicationTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.saveable.rememberSaveable
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -45,7 +44,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-    val pagerState =rememberPagerState(pageCount = { 2 })
+    val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
     
     Column(modifier = Modifier.fillMaxSize()) {
