@@ -41,6 +41,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,7 +79,27 @@ fun SearchScreen(
     
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val gridState = rememberLazyGridState()
+
+    // 스크롤 위치를 rememberSaveable로 저장
+    var savedScrollPosition by rememberSaveable { mutableStateOf(0) }
+    val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = savedScrollPosition)
+
+    // 스크롤 위치 변경 감지 및 저장
+    LaunchedEffect(Unit) {
+        snapshotFlow { gridState.firstVisibleItemIndex }
+            .collect { index ->
+                if (index > 0) {
+                    savedScrollPosition = index
+                }
+            }
+    }
+
+    // 컴포저블이 재구성될 때마다 스크롤 상태 복원
+    LaunchedEffect(savedScrollPosition) {
+        if (savedScrollPosition > 0 && gridState.firstVisibleItemIndex == 0) {
+            gridState.scrollToItem(savedScrollPosition)
+        }
+    }
 
     val favoriteStatuses by state.favoriteStatusFlow.collectAsState(initial = emptyList())
 
