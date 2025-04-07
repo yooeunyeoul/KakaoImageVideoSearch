@@ -78,7 +78,7 @@ class CachingAwarePagingSource @Inject constructor(
 
             // SearchPagingSource의 load 메서드에 page 정보 전달
             val result = apiPagingSource.load(
-                PagingSource.LoadParams.Refresh(
+                LoadParams.Refresh(
                     key = page,
                     loadSize = params.loadSize,
                     placeholdersEnabled = false

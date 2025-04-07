@@ -6,9 +6,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ImageMeta(
     @SerialName("is_end")
-    val isEnd: Boolean,
+    val isEnd: Boolean = false,
     @SerialName("pageable_count")
-    val pageableCount: Int,
+    val pageableCount: Int = 0,
     @SerialName("total_count")
-    val totalCount: Int
+    val totalCount: Int = 0
 ) 

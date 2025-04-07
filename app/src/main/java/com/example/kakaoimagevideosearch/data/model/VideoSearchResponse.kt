@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class VideoSearchResponse(
     @SerialName("documents")
-    val documents: List<VideoDocument>,
+    val documents: List<VideoDocument> = emptyList(),
     @SerialName("meta")
-    val meta: VideoMeta
+    val meta: VideoMeta = VideoMeta()
 ) 

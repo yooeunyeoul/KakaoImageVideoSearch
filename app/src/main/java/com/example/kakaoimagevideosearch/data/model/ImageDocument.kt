@@ -6,19 +6,19 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ImageDocument(
     @SerialName("collection")
-    val collection: String,
+    val collection: String = "",
     @SerialName("datetime")
-    val datetime: String,
+    val datetime: String = "",
     @SerialName("display_sitename")
-    val displaySitename: String,
+    val displaySitename: String = "",
     @SerialName("doc_url")
-    val docUrl: String,
+    val docUrl: String = "",
     @SerialName("height")
-    val height: Int,
+    val height: Int = 0,
     @SerialName("image_url")
-    val imageUrl: String,
+    val imageUrl: String = "",
     @SerialName("thumbnail_url")
-    val thumbnailUrl: String,
+    val thumbnailUrl: String = "",
     @SerialName("width")
-    val width: Int
+    val width: Int = 0
 ) 

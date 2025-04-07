@@ -6,15 +6,15 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class VideoDocument(
     @SerialName("author")
-    val author: String,
+    val author: String = "",
     @SerialName("datetime")
-    val datetime: String,
+    val datetime: String = "",
     @SerialName("play_time")
-    val playTime: Int,
+    val playTime: Int = 0,
     @SerialName("thumbnail")
-    val thumbnail: String,
+    val thumbnail: String = "",
     @SerialName("title")
-    val title: String,
+    val title: String = "",
     @SerialName("url")
-    val url: String
+    val url: String = ""
 ) 
