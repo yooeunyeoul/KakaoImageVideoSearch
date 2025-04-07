@@ -17,6 +17,13 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+        
+        // Room Schema 경로 설정
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments["room.schemaLocation"] = "$projectDir/schemas"
+            }
+        }
     }
 
     buildTypes {
@@ -76,8 +83,18 @@ dependencies {
     implementation(libs.retrofit2.kotlinx.serialization.converter)
     implementation(libs.kotlinx.serialization.json)
 
+    // 🔷 Room Database 🔷
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.paging)
+    kapt(libs.androidx.room.compiler)
+
     // 🔷 Image Loading 🔷
     implementation(libs.coil.compose)
+
+    // 🔷 Paging 3 🔷
+    implementation(libs.androidx.paging.runtime.ktx)
+    implementation(libs.androidx.paging.compose)
 
     // 🔷 Unit Testing Dependencies 🔷
     testImplementation(libs.junit)
@@ -101,8 +118,4 @@ dependencies {
     kaptAndroidTest(libs.hilt.compiler)
     androidTestAnnotationProcessor(libs.hilt.compiler)
     testAnnotationProcessor(libs.hilt.compiler)
-
-    // 🔷 Paging 3 🔷
-    implementation(libs.androidx.paging.runtime.ktx)
-    implementation(libs.androidx.paging.compose)
 }

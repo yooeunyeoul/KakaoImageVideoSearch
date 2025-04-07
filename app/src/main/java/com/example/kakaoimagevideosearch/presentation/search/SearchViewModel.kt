@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
 
 data class SearchState(
     val query: String = "",
@@ -135,6 +136,25 @@ class SearchViewModel @AssistedInject constructor(
     override fun onCleared() {
         super.onCleared()
         Log.d(TAG, "SearchViewModel onCleared 호출됨 (ViewModel 소멸)")
+    }
+
+    /**
+     * 검색 결과 ID로 좋아요 상태 토글
+     */
+    fun toggleFavorite(resultId: String) {
+        viewModelScope.launch {
+            searchRepository.toggleFavorite(resultId)
+            // 필요하면 UI 갱신을 위해 State를 업데이트할 수도 있음
+        }
+    }
+
+    /**
+     * 특정 검색어에 대한 좋아요 상태 변경을 관찰하는 Flow
+     * UI에서 이 Flow를 구독하여 좋아요 상태 변경을 실시간으로 반영할 수 있음
+     */
+    fun getFavoriteStatusFlow(query: String): Flow<List<SearchResult>> {
+        return searchRepository.getCachedSearchResultsFlow(query)
+            .map { entityList -> entityList.map { it } }
     }
 
     @AssistedFactory

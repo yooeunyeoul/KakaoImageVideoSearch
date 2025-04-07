@@ -27,11 +27,14 @@ class SearchPagingSource @Inject constructor(
     // 각 API의 마지막 페이지 도달 여부를 추적하는 상태 변수
     private var isImageEndReached = false
     private var isVideoEndReached = false
-
-    // PagingSource가 새로 생성될 때마다 상태를 초기화하기 위한 함수 (Refresh 시 호출됨)
-    // Paging 3 라이브러리는 Refresh가 필요할 때 PagingSource 인스턴스를 새로 만듭니다.
-    // 따라서 이 변수들은 인스턴스 생성 시 자동으로 false로 초기화됩니다.
-    // 별도의 reset 함수는 필요 없습니다.
+    
+    // 검색 결과 로드 콜백
+    private var onPagesLoadedCallback: ((List<SearchResult>) -> Unit)? = null
+    
+    // 콜백 등록 함수
+    fun registerOnPagesLoadedCallback(callback: (List<SearchResult>) -> Unit) {
+        this.onPagesLoadedCallback = callback
+    }
 
     override fun getRefreshKey(state: PagingState<Int, SearchResult>): Int? {
         // 기본 구현 유지 또는 필요에 따라 조정
@@ -147,6 +150,12 @@ class SearchPagingSource @Inject constructor(
 
                 // 결과를 datetime 기준으로 정렬
                 val sortedResults = combinedResults.sortedByDescending { it.datetime }
+
+                // 첫 페이지인 경우 캐시 콜백 호출 (첫 페이지만 캐싱)
+                if (page == STARTING_PAGE_INDEX && sortedResults.isNotEmpty()) {
+                    Log.d(TAG, "첫 페이지 로드 완료 - 캐싱 콜백 호출: 결과 수=${sortedResults.size}")
+                    onPagesLoadedCallback?.invoke(sortedResults)
+                }
 
                 // 다음 페이지 키 계산: 두 API가 *모두* 마지막 페이지에 도달했을 때만 null
                 val nextKey = if (isImageEndReached && isVideoEndReached) {

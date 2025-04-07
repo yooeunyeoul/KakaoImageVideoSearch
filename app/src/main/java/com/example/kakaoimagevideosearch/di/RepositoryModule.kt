@@ -1,8 +1,10 @@
 package com.example.kakaoimagevideosearch.di
 
-import com.example.kakaoimagevideosearch.data.ItemRepository
-import com.example.kakaoimagevideosearch.data.ItemRepositoryImpl
-import com.example.kakaoimagevideosearch.data.repository.SearchPagingRepository
+import com.example.kakaoimagevideosearch.data.repository.BookmarkRepositoryImpl
+import com.example.kakaoimagevideosearch.data.repository.CachedSearchRepository
+import com.example.kakaoimagevideosearch.data.repository.KakaoSearchRepositoryImpl
+import com.example.kakaoimagevideosearch.domain.repository.BookmarkRepository
+import com.example.kakaoimagevideosearch.domain.repository.KakaoSearchRepository
 import com.example.kakaoimagevideosearch.domain.repository.SearchRepository
 import dagger.Binds
 import dagger.Module
@@ -12,12 +14,23 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface RepositoryModule {
-    @Binds
-    @Singleton
-    fun bindItemRepository(impl: ItemRepositoryImpl): ItemRepository
+abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    fun bindSearchRepository(impl: SearchPagingRepository): SearchRepository
+    abstract fun bindKakaoSearchRepository(
+        kakaoSearchRepositoryImpl: KakaoSearchRepositoryImpl
+    ): KakaoSearchRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSearchRepository(
+        cachedSearchRepository: CachedSearchRepository
+    ): SearchRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindBookmarkRepository(
+        bookmarkRepositoryImpl: BookmarkRepositoryImpl
+    ): BookmarkRepository
 } 

@@ -21,10 +21,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -34,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -61,6 +68,7 @@ import com.example.kakaoimagevideosearch.presentation.search.SearchViewModel
 import com.example.kakaoimagevideosearch.ui.theme.MyApplicationTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOf
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -102,6 +110,25 @@ fun SearchScreen(
     // 검색어 입력 상태 관리
     val scaffoldState = rememberBottomSheetScaffoldState()
     var searchQuery by remember { mutableStateOf("") }
+
+    // 좋아요 상태 변경 관찰
+    val currentQuery = state.query
+    val favoriteStatusFlow = remember(currentQuery) {
+        if (currentQuery.isNotBlank()) {
+            viewModel.getFavoriteStatusFlow(currentQuery)
+        } else {
+            flowOf(emptyList())
+        }
+    }
+    val favoriteStatuses by favoriteStatusFlow.collectAsState(initial = emptyList())
+    
+    // 좋아요 상태를 최신 정보로 업데이트
+    val searchResultsWithUpdatedFavorites = lazyPagingItems.itemSnapshotList.items.map { result ->
+        val updatedFavorite = favoriteStatuses.find { it.id == result.id }
+        updatedFavorite?.let {
+            result.copy(isFavorite = it.isFavorite)
+        } ?: result
+    }
 
     // ViewModel의 Side Effect 처리 (에러 메시지 표시 등)
     LaunchedEffect(viewModel) {
@@ -210,7 +237,13 @@ fun SearchScreen(
                 ) { index ->
                     val item = lazyPagingItems[index]
                     if (item != null) {
-                        SearchResultItem(item = item)
+                        // 업데이트된 좋아요 상태 정보 찾기
+                        val updatedItem = searchResultsWithUpdatedFavorites.find { it.id == item.id } ?: item
+                        
+                        SearchResultItem(
+                            item = updatedItem,
+                            onFavoriteClick = { viewModel.toggleFavorite(item.id) }
+                        )
                     }
                 }
 
@@ -275,7 +308,10 @@ fun SearchScreen(
 
 // 개별 검색 결과 아이템 Composable
 @Composable
-fun SearchResultItem(item: SearchResult) {
+fun SearchResultItem(
+    item: SearchResult,
+    onFavoriteClick: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth().height(100.dp),
     ) {
@@ -308,6 +344,18 @@ fun SearchResultItem(item: SearchResult) {
                     text = if (item.type == SearchResultType.IMAGE) "[이미지]" else "[비디오]",
                     style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.primary
+                )
+            }
+            
+            // 좋아요 버튼 추가
+            IconButton(
+                onClick = onFavoriteClick,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            ) {
+                Icon(
+                    imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = "좋아요",
+                    tint = if (item.isFavorite) Color.Red else Color.Gray
                 )
             }
         }

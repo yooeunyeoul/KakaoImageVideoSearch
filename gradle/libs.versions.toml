@@ -37,6 +37,9 @@ okhttp = "4.12.0"
 loggingInterceptorVersion = "4.12.0"
 retrofit2KotlinxSerializationConverter = "0.8.0"
 
+# Room Database
+room = "2.6.1"
+
 # Unit Testing
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -82,6 +85,12 @@ mavericks-compose = { module = "com.airbnb.android:mavericks-compose", version.r
 mavericks-hilt = { module = "com.airbnb.android:mavericks-hilt", version.ref = "mavericksHilt" }
 mavericks-navigation = { module = "com.airbnb.android:mavericks-navigation", version.ref = "mavericksNavigation" }
 mavericks-testing = { module = "com.airbnb.android:mavericks-testing", version.ref = "mavericks" }
+
+# 📌 Room Database
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+androidx-room-paging = { group = "androidx.room", name = "room-paging", version.ref = "room" }
 
 # 📌 Networking & Retrofit
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
