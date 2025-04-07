@@ -58,7 +58,6 @@ sealed class SearchEvent : BaseUiEvent {
 
 sealed class SearchEffect : BaseUiEffect {
     data class ShowError(val message: String) : SearchEffect()
-    data class FavoriteToggled(val resultId: String) : SearchEffect() // 북마크 토글 완료 이벤트 추가
 }
 
 class SearchViewModel @AssistedInject constructor(
@@ -197,9 +196,6 @@ class SearchViewModel @AssistedInject constructor(
                 // 검색 Repository에서 좋아요 상태 토글
                 searchRepository.toggleFavorite(resultId)
                 Log.d(TAG, "좋아요 상태 변경 요청 완료: $resultId")
-                
-                // 북마크 토글 완료 이펙트 발행
-                sendEffect(SearchEffect.FavoriteToggled(resultId))
                 
                 // 현재 쿼리에 대한 좋아요 상태 다시 로드
                 withState { state ->
