@@ -1,8 +1,6 @@
 package com.example.kakaoimagevideosearch.di
 
 import com.example.kakaoimagevideosearch.data.api.ApiConstants
-import com.example.kakaoimagevideosearch.data.api.ItemApiService
-import com.example.kakaoimagevideosearch.data.api.ItemApiServiceImpl
 import com.example.kakaoimagevideosearch.data.api.KakaoSearchApi
 import com.example.kakaoimagevideosearch.utils.NetworkResultCallAdapterFactory
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -52,10 +50,4 @@ object NetworkModule {
     @Singleton
     fun provideKakaoSearchApi(retrofit: Retrofit): KakaoSearchApi =
         retrofit.create(KakaoSearchApi::class.java)
-
-    @Provides
-    @Singleton
-    fun provideItemApiService(): ItemApiService {
-        return ItemApiServiceImpl()
-    }
 }

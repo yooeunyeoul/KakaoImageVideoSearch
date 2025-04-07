@@ -17,13 +17,5 @@ data class SearchCacheInfoEntity(
     companion object {
         // 캐시 유효 기간: 5분
         const val CACHE_DURATION_MS = 5 * 60 * 1000L
-        
-        /**
-         * 캐시가 유효한지 확인
-         * @return 현재 시간이 만료 시간보다 작으면 true(유효함), 아니면 false(만료됨)
-         */
-        fun isValid(entity: SearchCacheInfoEntity): Boolean {
-            return System.currentTimeMillis() < entity.expirationTimeMs
-        }
     }
 } 
