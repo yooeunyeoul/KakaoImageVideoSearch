@@ -269,59 +269,104 @@ fun SearchScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(
-                    count = lazyPagingItems.itemCount,
-                    key = { index -> lazyPagingItems.peek(index)?.id ?: index },
-                    // contentType = { index -> lazyPagingItems.peek(index)?.type } // 필요시 타입별 다른 Composable 위해 사용
-                ) { index ->
-                    val item = lazyPagingItems[index]
-                    if (item != null) {
-                        // items 람다 내에서 좋아요 상태 찾기
-                        val isFavorite = favoriteStatuses.find { it.id == item.id }?.isFavorite
-                            ?: item.isFavorite // 기본값 사용
-
-                        // Grid 아이템 표시
-                        GridSearchResultItem(
-                            item = item,
-                            isFavorite = isFavorite, // 계산된 좋아요 상태 전달
-                            onFavoriteClick = { viewModel.toggleFavorite(item.id) }
-                        )
-                    } else {
-                        // Placeholder (현재 설정에서는 거의 호출되지 않음)
-                        Box(modifier = Modifier.aspectRatio(1f).background(Color.Gray))
-                    }
-                }
-
-                // LoadState 처리 (GridItemSpan 사용)
+                // LoadState 가져오기
                 val loadState = lazyPagingItems.loadState
-                val span: (LazyGridItemSpanScope) -> GridItemSpan = { GridItemSpan(2) } // span 정의
-
-                // Refresh 상태
-                when (val refreshState = loadState.refresh) {
-                    is LoadState.Loading -> item(span = span, key = "Refresh Loading") {
-                        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                    }
-                    is LoadState.Error -> item(span = span, key = "Refresh Error") {
-                        ErrorItem(message = refreshState.error.message ?: "데이터 로딩 실패", onRetry = { lazyPagingItems.retry() })
-                    }
-                    is LoadState.NotLoading -> {
-                        if (lazyPagingItems.itemCount == 0 && refreshState.endOfPaginationReached) {
-                            item(span = span, key = "Empty Result") {
-                                Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { Text("검색 결과가 없습니다.") }
-                            }
+                val span: (LazyGridItemSpanScope) -> GridItemSpan = { GridItemSpan(2) }
+                
+                // 앱 시작 초기 상태 - 검색어가 없고 결과도 없는 경우 안내 표시
+                if (state.query.isBlank() && lazyPagingItems.itemCount == 0) {
+                    // 초기 안내 메시지 표시 (로딩 중일 때도 이 메시지 표시)
+                    item(span = span, key = "Initial Guide") {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(400.dp)
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.FavoriteBorder,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "이미지와 비디오를 검색해보세요",
+                                style = MaterialTheme.typography.headlineSmall,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "상단 검색창에 검색어를 입력하여 원하는 콘텐츠를 찾아보세요",
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
                         }
                     }
-                }
+                } else {
+                    // 일반 검색 결과 항목들
+                    items(
+                        count = lazyPagingItems.itemCount,
+                        key = { index -> lazyPagingItems.peek(index)?.id ?: index },
+                    ) { index ->
+                        val item = lazyPagingItems[index]
+                        if (item != null) {
+                            // items 람다 내에서 좋아요 상태 찾기
+                            val isFavorite = favoriteStatuses.find { it.id == item.id }?.isFavorite
+                                ?: item.isFavorite // 기본값 사용
 
-                // Append 상태
-                when (val appendState = loadState.append) {
-                    is LoadState.Loading -> item(span = span, key = "Append Loading") {
-                        Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(modifier = Modifier.size(32.dp)) }
+                            // Grid 아이템 표시
+                            GridSearchResultItem(
+                                item = item,
+                                isFavorite = isFavorite, // 계산된 좋아요 상태 전달
+                                onFavoriteClick = { viewModel.toggleFavorite(item.id) }
+                            )
+                        } else {
+                            // Placeholder (현재 설정에서는 거의 호출되지 않음)
+                            Box(modifier = Modifier.aspectRatio(1f).background(Color.Gray))
+                        }
                     }
-                    is LoadState.Error -> item(span = span, key = "Append Error") {
-                        ErrorItem(message = appendState.error.message ?: "추가 로딩 실패", onRetry = { lazyPagingItems.retry() }, isCompact = true)
+
+                    // 검색어가 있는 경우에만 로딩 및 에러 표시
+                    if (state.query.isNotBlank()) {
+                        // Refresh 상태
+                        when (val refreshState = loadState.refresh) {
+                            is LoadState.Loading -> item(span = span, key = "Refresh Loading") {
+                                Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { 
+                                    CircularProgressIndicator() 
+                                }
+                            }
+                            is LoadState.Error -> item(span = span, key = "Refresh Error") {
+                                ErrorItem(message = refreshState.error.message ?: "데이터 로딩 실패", onRetry = { lazyPagingItems.retry() })
+                            }
+                            is LoadState.NotLoading -> {
+                                if (lazyPagingItems.itemCount == 0 && refreshState.endOfPaginationReached) {
+                                    item(span = span, key = "Empty Result") {
+                                        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { 
+                                            Text("검색 결과가 없습니다.") 
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Append 상태
+                        when (val appendState = loadState.append) {
+                            is LoadState.Loading -> item(span = span, key = "Append Loading") {
+                                Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) { 
+                                    CircularProgressIndicator(modifier = Modifier.size(32.dp)) 
+                                }
+                            }
+                            is LoadState.Error -> item(span = span, key = "Append Error") {
+                                ErrorItem(message = appendState.error.message ?: "추가 로딩 실패", onRetry = { lazyPagingItems.retry() }, isCompact = true)
+                            }
+                            is LoadState.NotLoading -> { /* Append 완료 시 특별히 표시할 내용 없음 */ }
+                        }
                     }
-                    is LoadState.NotLoading -> { /* Append 완료 시 특별히 표시할 내용 없음 */ }
                 }
             }
         }
