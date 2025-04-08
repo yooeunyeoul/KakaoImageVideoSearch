@@ -2,6 +2,13 @@
 
 카카오 이미지/비디오 검색 API를 활용한 안드로이드 애플리케이션입니다.
 
+## 개발 환경
+
+- Android Studio Meerkat | 2024.3.1 Patch 1
+- Android SDK 34 (Android 14.0)
+- Kotlin 1.9.22
+- Gradle 8.2
+
 ## 프로젝트 구조
 
 ```
@@ -101,4 +108,5 @@ app/src/main/java/com/example/kakaoimagevideosearch/
 3. 북마크 처리
    ```
    UI -> ViewModel -> BookmarkRepository -> Room Database
+   ```
    
