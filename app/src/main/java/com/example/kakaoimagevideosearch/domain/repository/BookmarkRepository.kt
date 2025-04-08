@@ -20,23 +20,11 @@ interface BookmarkRepository {
     suspend fun addBookmark(searchResult: SearchResult)
     
     /**
-     * 검색 결과 북마크 제거
-     * @param searchResult 북마크 제거할 검색 결과
-     */
-    suspend fun removeBookmark(searchResult: SearchResult)
-    
-    /**
      * ID로 북마크 제거
      * @param id 검색 결과 ID
      */
     suspend fun removeBookmarkById(id: String)
-    
-    /**
-     * ID의 북마크 여부 확인
-     * @param id 검색 결과 ID
-     * @return 북마크 여부 Flow
-     */
-    fun isBookmarked(id: String): Flow<Boolean>
+
     
     /**
      * 북마크 개수 가져오기

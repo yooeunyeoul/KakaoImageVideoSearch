@@ -29,7 +29,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.example.kakaoimagevideosearch.domain.model.SearchResult
 import com.example.kakaoimagevideosearch.domain.model.SearchResultType
@@ -95,12 +98,17 @@ fun SearchResultItem(
                 .align(Alignment.TopStart)
                 .padding(6.dp)
                 .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
-                .padding(horizontal = 6.dp, vertical = 2.dp)
+                .padding(horizontal = 6.dp, vertical = 4.dp) // 패딩 약간 더 증가
         ) {
+            // mapper에서 이미 개행 처리된 날짜/시간 텍스트를 그대로 표시
             Text(
-                text = item.datetime.take(10), // yyyy-MM-dd 부분만 사용
+                text = item.datetime,
                 color = Color.White,
-                style = MaterialTheme.typography.labelSmall
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center,
+                lineHeight = 14.sp, // 줄 간격 지정
+                maxLines = 2, // 최대 2줄 표시
+                overflow = TextOverflow.Visible // 텍스트가 잘리지 않도록 함
             )
         }
 

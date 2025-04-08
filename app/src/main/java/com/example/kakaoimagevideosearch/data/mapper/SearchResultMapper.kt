@@ -33,7 +33,7 @@ fun List<VideoDocument>.toVideoDomain() = map { it.toDomain() }
 /**
  * 날짜 시간 문자열을 포맷팅합니다.
  * 입력 형식: "2023-04-06T12:34:56.000+09:00"
- * 출력 형식: "2023-04-06 12:34:56"
+ * 출력 형식: "yyyy.MM.dd\nHH:mm" (날짜와 시간 사이에 개행 추가)
  */
 private fun formatDateTime(dateTimeStr: String): String {
     return try {
@@ -41,9 +41,16 @@ private fun formatDateTime(dateTimeStr: String): String {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault())
         val date = inputFormat.parse(dateTimeStr) ?: Date()
         
-        // 원하는 형식으로 포맷팅
-        val outputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        outputFormat.format(date)
+        // 날짜 부분 포맷팅
+        val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault())
+        val dateStr = dateFormat.format(date)
+        
+        // 시간 부분 포맷팅 (초 제외)
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val timeStr = timeFormat.format(date)
+        
+        // 날짜와 시간 사이에 개행 추가
+        "$dateStr\n$timeStr"
     } catch (e: Exception) {
         // 파싱 실패 시 원본 반환
         dateTimeStr

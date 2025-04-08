@@ -30,18 +30,9 @@ class BookmarkRepositoryImpl @Inject constructor(
         bookmarkDao.insertBookmark(BookmarkEntity.fromDomain(searchResult))
     }
 
-    override suspend fun removeBookmark(searchResult: SearchResult) {
-        Log.d(TAG, "북마크 제거: id=${searchResult.id}, title=${searchResult.title}")
-        bookmarkDao.deleteBookmarkById(searchResult.id)
-    }
-
     override suspend fun removeBookmarkById(id: String) {
         Log.d(TAG, "북마크 제거 (ID로): id=$id")
         bookmarkDao.deleteBookmarkById(id)
-    }
-
-    override fun isBookmarked(id: String): Flow<Boolean> {
-        return bookmarkDao.isBookmarked(id)
     }
 
     override fun getBookmarkCount(): Flow<Int> {

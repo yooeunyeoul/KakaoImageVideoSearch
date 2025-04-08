@@ -29,22 +29,10 @@ interface BookmarkDao {
     suspend fun insertBookmark(bookmark: BookmarkEntity)
     
     /**
-     * 북마크 삭제
-     */
-    @Delete
-    suspend fun deleteBookmark(bookmark: BookmarkEntity)
-    
-    /**
      * ID로 북마크 삭제
      */
     @Query("DELETE FROM bookmarks WHERE id = :id")
     suspend fun deleteBookmarkById(id: String)
-    
-    /**
-     * 특정 ID의 북마크 존재 여부 확인
-     */
-    @Query("SELECT EXISTS(SELECT 1 FROM bookmarks WHERE id = :id)")
-    fun isBookmarked(id: String): Flow<Boolean>
     
     /**
      * 모든 북마크 개수 조회
