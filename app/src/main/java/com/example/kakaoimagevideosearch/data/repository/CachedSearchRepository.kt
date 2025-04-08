@@ -126,9 +126,18 @@ class CachedSearchRepository @Inject constructor(
      * (SearchViewModel에서 필요한 경우 사용)
      */
     override fun getCachedSearchResultsFlow(query: String): Flow<List<SearchResult>> {
-        return searchDao.getSearchResultsListFlow(query).map { entities ->
-            entities.map { it.toDomain() }
-        }
+        return searchDao.getSearchResultsListFlow(query)
+            .map { entities -> 
+                // 명시적으로 리스트 생성하여 반환
+                entities.mapNotNull { entity -> 
+                    try {
+                        entity.toDomain()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "엔티티 변환 중 오류 발생", e)
+                        null
+                    }
+                }
+            }
     }
 
     /**
