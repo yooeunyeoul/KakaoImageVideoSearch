@@ -52,8 +52,8 @@ class CachedSearchRepository @Inject constructor(
             config = PagingConfig(
                 pageSize = PAGE_SIZE,
                 enablePlaceholders = false,
-                maxSize = PAGE_SIZE * 4,
-                prefetchDistance = 10
+                maxSize = PAGE_SIZE * 6,
+                prefetchDistance = 20
             ),
             pagingSourceFactory = { 
                 CachingAwarePagingSource(
