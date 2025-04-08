@@ -132,15 +132,6 @@ class CachedSearchRepository @Inject constructor(
             entities.map { it.toDomain() }
         }
     }
-    
-    /**
-     * 캐시된 모든 검색어 정보 Flow 제공
-     */
-    fun getCachedSearchQueries(): Flow<List<String>> {
-        return searchDao.getAllSearchCacheInfo().map { cacheInfoList ->
-            cacheInfoList.map { it.query }
-        }
-    }
 
     /**
      * 특정 검색 결과의 좋아요 상태를 토글
