@@ -18,6 +18,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,6 +30,9 @@ class CachedSearchRepository @Inject constructor(
     private val bookmarkRepository: BookmarkRepository,
     @ApplicationScope private val externalScope: CoroutineScope
 ) : SearchRepository {
+
+    // 캐시 저장 작업을 동기화하기 위한 Mutex
+    private val cacheMutex = Mutex()
 
     companion object {
         private const val PAGE_SIZE = 20
@@ -78,42 +83,49 @@ class CachedSearchRepository @Inject constructor(
     private fun saveResultsToCache(query: String, results: List<SearchResult>, page: Int) {
         externalScope.launch {
             try {
-                Log.d(TAG, "검색 결과 캐싱: 쿼리='$query', 페이지=$page, 결과 수=${results.size}")
-                
-                // 캐시 정보 조회 또는 생성
-                val cacheInfo = searchDao.getSearchCacheInfo(query) ?: SearchCacheInfoEntity(query = query)
-                
-                // 캐시 정보 업데이트 (시간 갱신)
-                searchDao.insertSearchCacheInfo(cacheInfo.copy(
-                    lastSearchTime = System.currentTimeMillis(),
-                    expirationTimeMs = System.currentTimeMillis() + SearchCacheInfoEntity.CACHE_DURATION_MS
-                ))
-                
-                // 만료된 캐시 정리 (백그라운드에서 수행)
-                searchDao.clearExpiredCache()
-                
-                // 기존 검색 결과에서 썸네일 URL 목록 조회
-                val existingThumbnailUrls = searchDao.getThumbnailUrlsByQuery(query)
-                    ?.map { it.thumbnailUrl }
-                    ?.toSet() ?: emptySet()
-                
-                // 중복되지 않는 결과만 필터링
-                val filteredResults = results.filter { result -> 
-                    // 썸네일 URL이 기존 데이터에 없는 경우만 포함
-                    result.thumbnailUrl !in existingThumbnailUrls
-                }
-                
-                // 필터링된 항목의 수 로그
-                Log.d(TAG, "중복 제거 후 저장할 결과 수: 원본=${results.size}, 필터링 후=${filteredResults.size}")
-                
-                if (filteredResults.isNotEmpty()) {
-                    // 이 페이지의 결과를 캐시에 저장 (중복 제거 후)
+                // Mutex로 보호된 코드 블록 - 동시성 이슈 방지
+                cacheMutex.withLock {
+                    Log.d(TAG, "검색 결과 캐싱: 쿼리='$query', 페이지=$page, 결과 수=${results.size}")
+                    
+                    // 캐시 정보 조회 또는 생성
+                    val cacheInfo = searchDao.getSearchCacheInfo(query) ?: SearchCacheInfoEntity(query = query)
+                    
+                    // 현재 시간 저장 - 여러 곳에서 사용
+                    val currentTime = System.currentTimeMillis()
+                    
+                    // 캐시 정보 업데이트 (시간 갱신)
+                    val updatedCacheInfo = cacheInfo.copy(
+                        lastSearchTime = currentTime,
+                        expirationTimeMs = currentTime + SearchCacheInfoEntity.CACHE_DURATION_MS
+                    )
+                    
+                    // 만료된 캐시 정리 (백그라운드에서 수행)
+                    searchDao.clearExpiredCache()
+                    
+                    // 기존 검색 결과에서 썸네일 URL 목록 조회
+                    val existingThumbnailUrls = searchDao.getThumbnailUrlsByQuery(query)
+                        ?.map { it.thumbnailUrl }
+                        ?.toSet() ?: emptySet()
+                    
+                    // 중복되지 않는 결과만 필터링
+                    val filteredResults = results.filter { result -> 
+                        // 썸네일 URL이 기존 데이터에 없는 경우만 포함
+                        result.thumbnailUrl !in existingThumbnailUrls
+                    }
+                    
+                    // 필터링된 항목의 수 로그
+                    Log.d(TAG, "중복 제거 후 저장할 결과 수: 원본=${results.size}, 필터링 후=${filteredResults.size}")
+                    
+                    // 검색 결과를 엔티티로 변환
                     val entities = filteredResults.map { SearchResultEntity.fromDomain(it, query, page) }
-                    searchDao.insertSearchResults(entities)
-                } else {
-                    Log.d(TAG, "저장할 새로운 결과 없음 (모두 중복)")
+                    
+                    // 캐시 정보와 검색 결과를 트랜잭션으로 함께 저장
+                    searchDao.saveSearchResultsWithInfo(updatedCacheInfo, entities)
+                    
+                    if (filteredResults.isEmpty()) {
+                        Log.d(TAG, "저장할 새로운 결과 없음 (모두 중복)")
+                    }
                 }
-                
             } catch (e: Exception) {
                 Log.e(TAG, "캐시 저장 중 오류 발생: 쿼리='$query', 페이지=$page", e)
             }

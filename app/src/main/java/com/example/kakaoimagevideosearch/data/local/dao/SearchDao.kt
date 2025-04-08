@@ -80,6 +80,17 @@ interface SearchDao {
         deleteExpiredCacheInfo(currentTime)
     }
 
+    /**
+     * 캐시 정보와 검색 결과를 함께 저장 (트랜잭션)
+     * 캐시 정보 저장과 검색 결과 저장을 하나의 트랜잭션으로 처리
+     */
+    @Transaction
+    suspend fun saveSearchResultsWithInfo(cacheInfo: SearchCacheInfoEntity, results: List<SearchResultEntity>) {
+        insertSearchCacheInfo(cacheInfo)
+        if (results.isNotEmpty()) {
+            insertSearchResults(results)
+        }
+    }
     
     /**
      * 유효한 캐시에서 페이지 데이터 조회 (한 번의 쿼리로 유효성과 데이터 확인)
