@@ -55,7 +55,7 @@ fun LoadingIndicatorPreview() {
 fun LoadingIndicatorLargePreview() {
     MyApplicationTheme {
         LoadingIndicator(
-            size = 48,
+            size = 48.dp,
             boxHeight = 200
         )
     }

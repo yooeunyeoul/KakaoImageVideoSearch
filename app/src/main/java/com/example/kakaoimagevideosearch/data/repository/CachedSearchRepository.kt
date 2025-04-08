@@ -80,20 +80,17 @@ class CachedSearchRepository @Inject constructor(
             try {
                 Log.d(TAG, "검색 결과 캐싱: 쿼리='$query', 페이지=$page, 결과 수=${results.size}")
                 
-                // 첫 페이지인 경우에만 캐시 정보를 업데이트 또는 생성
-                if (page == 1) {
-                    // 캐시 정보 조회 또는 생성
-                    val cacheInfo = searchDao.getSearchCacheInfo(query) ?: SearchCacheInfoEntity(query = query)
-                    
-                    // 캐시 정보 업데이트 (시간 갱신)
-                    searchDao.insertSearchCacheInfo(cacheInfo.copy(
-                        lastSearchTime = System.currentTimeMillis(),
-                        expirationTimeMs = System.currentTimeMillis() + SearchCacheInfoEntity.CACHE_DURATION_MS
-                    ))
-                    
-                    // 첫 페이지가 로드될 때 만료된 캐시 정리 (백그라운드에서 수행)
-                    searchDao.clearExpiredCache()
-                }
+                // 캐시 정보 조회 또는 생성
+                val cacheInfo = searchDao.getSearchCacheInfo(query) ?: SearchCacheInfoEntity(query = query)
+                
+                // 캐시 정보 업데이트 (시간 갱신)
+                searchDao.insertSearchCacheInfo(cacheInfo.copy(
+                    lastSearchTime = System.currentTimeMillis(),
+                    expirationTimeMs = System.currentTimeMillis() + SearchCacheInfoEntity.CACHE_DURATION_MS
+                ))
+                
+                // 만료된 캐시 정리 (백그라운드에서 수행)
+                searchDao.clearExpiredCache()
                 
                 // 기존 검색 결과에서 썸네일 URL 목록 조회
                 val existingThumbnailUrls = searchDao.getThumbnailUrlsByQuery(query)

@@ -86,7 +86,7 @@ fun SearchContent(
             if (query.isNotBlank()) {
                 when (val refreshState = loadState.refresh) {
                     is LoadState.Loading -> item(span = span, key = "Refresh Loading") {
-                        LoadingIndicator(size = 48, boxHeight = 200)
+                        LoadingIndicator(size = 48.dp, boxHeight = 200)
                     }
                     is LoadState.Error -> item(span = span, key = "Refresh Error") {
                         ErrorItem(message = refreshState.error.message ?: "데이터 로딩 실패", onRetry = onRetry)
@@ -102,7 +102,7 @@ fun SearchContent(
 
                 when (val appendState = loadState.append) {
                     is LoadState.Loading -> item(span = span, key = "Append Loading") {
-                        LoadingIndicator(size = 32)
+                        LoadingIndicator(size = 32.dp)
                     }
                     is LoadState.Error -> item(span = span, key = "Append Error") {
                         ErrorItem(message = appendState.error.message ?: "추가 로딩 실패", onRetry = onRetry, isCompact = true)
