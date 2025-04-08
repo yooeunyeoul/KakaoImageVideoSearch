@@ -11,9 +11,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface BookmarkDao {
     /**
-     * 모든 북마크 아이템을 북마크한 시간 기준 내림차순으로 조회
+     * 모든 북마크 아이템을 북마크한 시간 기준 오름차순으로 조회
+     * (가장 오래된 북마크가 먼저, 최신 북마크가 마지막에 표시)
      */
-    @Query("SELECT * FROM bookmarks ORDER BY bookmarkedAt DESC")
+    @Query("SELECT * FROM bookmarks ORDER BY bookmarkedAt ASC")
     fun getAllBookmarks(): Flow<List<BookmarkEntity>>
     
     /**
