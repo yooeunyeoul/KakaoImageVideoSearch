@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.kakaoimagevideosearch.ui.theme.MyApplicationTheme
 
@@ -23,7 +24,7 @@ import com.example.kakaoimagevideosearch.ui.theme.MyApplicationTheme
 @Composable
 fun LoadingIndicator(
     modifier: Modifier = Modifier,
-    size: Int = 32,
+    size: Dp = 32.dp,
     boxHeight: Int = 0
 ) {
     Box(
@@ -36,7 +37,7 @@ fun LoadingIndicator(
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.size(size.dp)
+            modifier = Modifier.size(size)
         )
     }
 }

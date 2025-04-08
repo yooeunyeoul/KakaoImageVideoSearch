@@ -129,7 +129,7 @@ fun SearchScreenContent(
             }
 
             if (isSetupLoading) {
-                LoadingIndicator(size = 24)
+                LoadingIndicator(size = 24.dp)
             }
 
             SearchContent(
