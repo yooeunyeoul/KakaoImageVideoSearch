@@ -42,17 +42,6 @@ class CachedSearchRepository @Inject constructor(
     override fun getSearchResults(query: String): Flow<PagingData<SearchResult>> {
         Log.d(TAG, "getSearchResults 호출: 쿼리='$query'")
         
-        // 빈 쿼리인 경우 빠르게 처리
-        if (query.isBlank()) {
-            return Pager(
-                config = PagingConfig(
-                    pageSize = PAGE_SIZE,
-                    enablePlaceholders = false
-                ),
-                pagingSourceFactory = { SearchPagingSource(api, query) }
-            ).flow
-        }
-        
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE,
