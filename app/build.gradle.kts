@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.jetbrainsKotlinPluginSerialization)
     kotlin("kapt")
 }
 
@@ -80,8 +79,12 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.okhttp)
     implementation(libs.okhttp3.logging.interceptor)
-    implementation(libs.retrofit2.kotlinx.serialization.converter)
-    implementation(libs.kotlinx.serialization.json)
+    // implementation(libs.retrofit2.kotlinx.serialization.converter)
+    // implementation(libs.kotlinx.serialization.json)
+    
+    // Gson 의존성 추가
+    implementation(libs.gson)
+    implementation(libs.converter.gson)
 
     // 🔷 Room Database 🔷
     implementation(libs.androidx.room.runtime)

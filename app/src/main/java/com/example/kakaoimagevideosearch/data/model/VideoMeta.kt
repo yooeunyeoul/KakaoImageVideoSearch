@@ -1,14 +1,12 @@
 package com.example.kakaoimagevideosearch.data.model
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.google.gson.annotations.SerializedName
 
-@Serializable
 data class VideoMeta(
-    @SerialName("is_end")
+    @SerializedName("is_end")
     val isEnd: Boolean = false,
-    @SerialName("pageable_count")
+    @SerializedName("pageable_count")
     val pageableCount: Int = 0,
-    @SerialName("total_count")
+    @SerializedName("total_count")
     val totalCount: Int = 0
 ) 

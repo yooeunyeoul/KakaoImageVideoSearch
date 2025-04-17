@@ -1,12 +1,10 @@
 package com.example.kakaoimagevideosearch.data.model
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.google.gson.annotations.SerializedName
 
-@Serializable
 data class ImageSearchResponse(
-    @SerialName("documents")
+    @SerializedName("documents")
     val documents: List<ImageDocument> = emptyList(),
-    @SerialName("meta")
+    @SerializedName("meta")
     val meta: ImageMeta = ImageMeta()
 ) 

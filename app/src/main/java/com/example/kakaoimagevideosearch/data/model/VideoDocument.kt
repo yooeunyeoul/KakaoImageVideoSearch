@@ -1,20 +1,18 @@
 package com.example.kakaoimagevideosearch.data.model
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.google.gson.annotations.SerializedName
 
-@Serializable
 data class VideoDocument(
-    @SerialName("author")
+    @SerializedName("author")
     val author: String = "",
-    @SerialName("datetime")
+    @SerializedName("datetime")
     val datetime: String = "",
-    @SerialName("play_time")
+    @SerializedName("play_time")
     val playTime: Int = 0,
-    @SerialName("thumbnail")
+    @SerializedName("thumbnail")
     val thumbnail: String = "",
-    @SerialName("title")
+    @SerializedName("title")
     val title: String = "",
-    @SerialName("url")
+    @SerializedName("url")
     val url: String = ""
 ) 

@@ -36,7 +36,7 @@ fun BookmarkContent(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(bookmarks) { bookmark ->
+        items(bookmarks, key = {it.id}) { bookmark ->
             SearchResultItem(
                 item = bookmark,
                 showFavoriteButton = false, // 북마크 화면에서는 하트 버튼 표시 안 함
