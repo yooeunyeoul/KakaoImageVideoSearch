@@ -1,22 +1,24 @@
 package com.example.kakaoimagevideosearch.data.model
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 data class ImageDocument(
-    @SerializedName("collection")
+    @Json(name = "collection")
     val collection: String = "",
-    @SerializedName("datetime")
+    @Json(name = "datetime")
     val datetime: String = "",
-    @SerializedName("display_sitename")
+    @Json(name = "display_sitename")
     val displaySitename: String = "",
-    @SerializedName("doc_url")
+    @Json(name = "doc_url")
     val docUrl: String = "",
-    @SerializedName("height")
+    @Json(name = "height")
     val height: Int = 0,
-    @SerializedName("image_url")
+    @Json(name = "image_url")
     val imageUrl: String = "",
-    @SerializedName("thumbnail_url")
+    @Json(name = "thumbnail_url")
     val thumbnailUrl: String = "",
-    @SerializedName("width")
+    @Json(name = "width")
     val width: Int = 0
 ) 

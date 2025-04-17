@@ -82,9 +82,15 @@ dependencies {
     // implementation(libs.retrofit2.kotlinx.serialization.converter)
     // implementation(libs.kotlinx.serialization.json)
     
-    // Gson 의존성 추가
-    implementation(libs.gson)
-    implementation(libs.converter.gson)
+    // Gson 의존성 제거
+    // implementation(libs.gson)
+    // implementation(libs.converter.gson)
+    
+    // Moshi 의존성 추가
+    implementation("com.squareup.moshi:moshi:1.15.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.0") 
+    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
+    kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.0") // 코드 생성 사용
 
     // 🔷 Room Database 🔷
     implementation(libs.androidx.room.runtime)

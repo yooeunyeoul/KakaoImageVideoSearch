@@ -1,10 +1,12 @@
 package com.example.kakaoimagevideosearch.data.model
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 data class VideoSearchResponse(
-    @SerializedName("documents")
+    @Json(name = "documents")
     val documents: List<VideoDocument> = emptyList(),
-    @SerializedName("meta")
+    @Json(name = "meta")
     val meta: VideoMeta = VideoMeta()
 ) 
